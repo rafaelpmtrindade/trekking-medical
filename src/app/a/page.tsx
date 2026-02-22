@@ -30,7 +30,7 @@ function AtendimentoContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const { user, medico, loading: authLoading } = useAuth();
-    const tagId = searchParams.get('t');
+    const tagId = searchParams.get('t')?.trim() || null;
 
     const [participante, setParticipante] = useState<Participante | null>(null);
     const [loadingParticipante, setLoadingParticipante] = useState(true);
