@@ -45,7 +45,18 @@ function AtendimentoContent() {
             return;
         }
 
+        // Wait for auth to initialize before fetching to avoid RLS failures
+        if (authLoading) return;
+
+        // If not authenticated, don't fetch (RLS will block it). 
+        // Just stop loading so the login screen can be shown.
+        if (!user) {
+            setLoadingParticipante(false);
+            return;
+        }
+
         async function fetchParticipante() {
+            setLoadingParticipante(true);
             const { data, error } = await supabase
                 .from('participantes')
                 .select('*')
@@ -56,12 +67,13 @@ function AtendimentoContent() {
                 setNotFound(true);
             } else {
                 setParticipante(data);
+                setNotFound(false); // Make sure to reset notFound if it succeeds on retry
             }
             setLoadingParticipante(false);
         }
 
         fetchParticipante();
-    }, [tagId]);
+    }, [tagId, authLoading, user]);
 
     // Get GPS on mount
     useEffect(() => {
