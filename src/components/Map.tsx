@@ -63,14 +63,18 @@ const MapController = dynamic(
 // Tile layer configs
 const TILE_LAYERS = {
     satellite: {
-        url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-        attribution: '&copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
+        url: 'https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',
+        attribution: '&copy; Google Maps Satellite',
         label: '🛰 Satélite',
+        maxNativeZoom: 19,
+        maxZoom: 21,
     },
     street: {
         url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
         label: '🗺 Mapa',
+        maxNativeZoom: 19,
+        maxZoom: 21,
     },
 };
 
@@ -191,7 +195,8 @@ export default function Map({ atendimentos, center, zoom = 15, newMarkerIds = []
                 <TileLayer
                     attribution={tile.attribution}
                     url={tile.url}
-                    maxZoom={19}
+                    maxNativeZoom={tile.maxNativeZoom}
+                    maxZoom={tile.maxZoom}
                 />
 
                 <MapController atendimentos={atendimentos} flyToId={flyToId} />
