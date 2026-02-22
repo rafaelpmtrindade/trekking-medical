@@ -547,20 +547,28 @@ function AtendimentoContent() {
 
                     {/* Severity Selector */}
                     <div className="form-group">
-                        <label className="form-label">Gravidade</label>
-                        <div className="severity-selector">
+                        <label className="form-label">Gravidade do Atendimento</label>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginTop: 8 }}>
                             {(Object.keys(GRAVIDADE_CONFIG) as Gravidade[]).map((g) => (
                                 <div
                                     key={g}
-                                    className={`severity-option ${gravidade === g ? 'selected' : ''}`}
                                     style={{
-                                        borderColor: gravidade === g ? GRAVIDADE_CONFIG[g].color : undefined,
-                                        background: gravidade === g ? GRAVIDADE_CONFIG[g].bgColor : undefined,
-                                        color: gravidade === g ? GRAVIDADE_CONFIG[g].color : undefined,
+                                        padding: '10px 4px',
+                                        borderRadius: '8px',
+                                        textAlign: 'center',
+                                        fontSize: '0.75rem',
+                                        fontWeight: 600,
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s',
+                                        border: '1px solid',
+                                        borderColor: gravidade === g ? GRAVIDADE_CONFIG[g].color : 'var(--color-border)',
+                                        background: gravidade === g ? GRAVIDADE_CONFIG[g].bgColor : 'transparent',
+                                        color: gravidade === g ? GRAVIDADE_CONFIG[g].color : 'var(--color-text-muted)',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '0.5px'
                                     }}
                                     onClick={() => setGravidade(g)}
                                 >
-                                    <span className="severity-icon">{GRAVIDADE_CONFIG[g].icon}</span>
                                     {GRAVIDADE_CONFIG[g].label}
                                 </div>
                             ))}
