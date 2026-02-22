@@ -905,6 +905,290 @@ tr:hover td {
 }
 
 /* ============================================ */
+/* ANIMATED MAP MARKERS                         */
+/* ============================================ */
+.custom-marker {
+  background: none !important;
+  border: none !important;
+}
+
+@keyframes markerPulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+
+  50% {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+
+@keyframes markerDropIn {
+  0% {
+    transform: translateY(-40px) scale(0.3);
+    opacity: 0;
+  }
+
+  50% {
+    transform: translateY(4px) scale(1.1);
+    opacity: 1;
+  }
+
+  70% {
+    transform: translateY(-2px) scale(0.95);
+  }
+
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.marker-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.marker-wrapper.marker-new {
+  animation: markerDropIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.marker-pulse-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  animation: markerPulse 2s ease-out infinite;
+  pointer-events: none;
+}
+
+.marker-dot {
+  border-radius: 50%;
+  border: 3px solid #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+}
+
+/* ============================================ */
+/* STAT CARD FLASH (on value change)            */
+/* ============================================ */
+@keyframes statFlash {
+  0% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5);
+  }
+
+  40% {
+    box-shadow: 0 0 0 8px rgba(16, 185, 129, 0.2);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+.stat-card.stat-flash {
+  animation: statFlash 0.8s ease-out;
+}
+
+/* ============================================ */
+/* TOAST NOTIFICATION                           */
+/* ============================================ */
+@keyframes toastSlideIn {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes toastSlideOut {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+}
+
+.toast-container {
+  position: fixed;
+  top: 72px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 150;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 500px;
+  padding: 0 16px;
+  pointer-events: none;
+}
+
+.toast {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: var(--shadow-lg);
+  animation: toastSlideIn 0.3s ease-out;
+  pointer-events: auto;
+  cursor: pointer;
+  transition: opacity 0.3s;
+  backdrop-filter: blur(12px);
+}
+
+.toast.toast-exit {
+  animation: toastSlideOut 0.3s ease-in forwards;
+}
+
+.toast-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  animation: pulse 2s infinite;
+}
+
+.toast-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.toast-title {
+  font-weight: 600;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.toast-subtitle {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  margin-top: 1px;
+}
+
+.toast-time {
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================ */
+/* LIVE TIMELINE FEED                           */
+/* ============================================ */
+@keyframes timelineSlideIn {
+  0% {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.timeline-strip {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 4px 0 8px 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-surface-hover) transparent;
+  -webkit-overflow-scrolling: touch;
+}
+
+.timeline-strip::-webkit-scrollbar {
+  height: 4px;
+}
+
+.timeline-strip::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.timeline-strip::-webkit-scrollbar-thumb {
+  background: var(--color-surface-hover);
+  border-radius: 2px;
+}
+
+.timeline-item {
+  flex-shrink: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  min-width: 200px;
+  max-width: 240px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.timeline-item:hover {
+  border-color: var(--color-border-focus);
+  transform: translateY(-2px);
+}
+
+.timeline-item.timeline-new {
+  animation: timelineSlideIn 0.4s ease-out;
+}
+
+.timeline-time {
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.timeline-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.timeline-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+.timeline-meta-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ============================================ */
 /* RESPONSIVE                                   */
 /* ============================================ */
 @media (max-width: 768px) {

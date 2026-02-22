@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -19,10 +19,22 @@ import {
     Image as ImageIcon,
     X,
     Info,
-    FileText
+    FileText,
+    Clock,
+    Zap
 } from 'lucide-react';
 
 const Map = dynamic(() => import('@/components/Map'), { ssr: false });
+
+// Toast notification type
+interface Toast {
+    id: string;
+    nome: string;
+    gravidade: Gravidade;
+    medico: string;
+    time: string;
+    exiting?: boolean;
+}
 
 export default function DashboardPage() {
     const { user, loading: authLoading } = useAuth();
@@ -37,6 +49,13 @@ export default function DashboardPage() {
     const [totalParticipantes, setTotalParticipantes] = useState(0);
     const [totalMedicos, setTotalMedicos] = useState(0);
 
+    // Realtime animation state
+    const [newMarkerIds, setNewMarkerIds] = useState<string[]>([]);
+    const [toasts, setToasts] = useState<Toast[]>([]);
+    const [flashCards, setFlashCards] = useState<Set<string>>(new Set());
+    const [newTimelineIds, setNewTimelineIds] = useState<Set<string>>(new Set());
+    const initialLoadDone = useRef(false);
+
     useEffect(() => {
         if (!authLoading && !user) {
             router.push('/login');
@@ -44,36 +63,62 @@ export default function DashboardPage() {
     }, [user, authLoading, router]);
 
     // Fetch data
-    useEffect(() => {
+    const fetchData = useCallback(async () => {
         if (!user) return;
 
-        async function fetchData() {
-            // Fetch atendimentos with joins
-            const { data: atData } = await supabase
-                .from('atendimentos')
-                .select(`
-          *,
-          participante:participantes(*),
-          medico:medicos(*),
-          fotos:atendimento_fotos(*)
-        `)
-                .order('created_at', { ascending: false });
+        const { data: atData } = await supabase
+            .from('atendimentos')
+            .select(`
+                *,
+                participante:participantes(*),
+                medico:medicos(*),
+                fotos:atendimento_fotos(*)
+            `)
+            .order('created_at', { ascending: false });
 
-            if (atData) setAtendimentos(atData);
+        if (atData) setAtendimentos(atData);
 
-            // Fetch counts
-            const { count: partCount } = await supabase
-                .from('participantes')
-                .select('*', { count: 'exact', head: true });
+        const { count: partCount } = await supabase
+            .from('participantes')
+            .select('*', { count: 'exact', head: true });
 
-            const { count: medCount } = await supabase
-                .from('medicos')
-                .select('*', { count: 'exact', head: true });
+        const { count: medCount } = await supabase
+            .from('medicos')
+            .select('*', { count: 'exact', head: true });
 
-            setTotalParticipantes(partCount || 0);
-            setTotalMedicos(medCount || 0);
-            setLoading(false);
-        }
+        setTotalParticipantes(partCount || 0);
+        setTotalMedicos(medCount || 0);
+        setLoading(false);
+        initialLoadDone.current = true;
+    }, [user]);
+
+    // Add toast
+    const addToast = useCallback((at: Atendimento) => {
+        const toast: Toast = {
+            id: at.id,
+            nome: at.participante?.nome || 'Participante',
+            gravidade: at.gravidade,
+            medico: at.medico?.nome || 'Médico',
+            time: new Date(at.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+        };
+        setToasts(prev => [toast, ...prev].slice(0, 3));
+        // Auto-dismiss after 5s  
+        setTimeout(() => {
+            setToasts(prev => prev.map(t => t.id === toast.id ? { ...t, exiting: true } : t));
+            setTimeout(() => {
+                setToasts(prev => prev.filter(t => t.id !== toast.id));
+            }, 300);
+        }, 5000);
+    }, []);
+
+    // Flash stat cards
+    const flashStatCards = useCallback(() => {
+        setFlashCards(new Set(['total', 'andamento', 'criticos']));
+        setTimeout(() => setFlashCards(new Set()), 800);
+    }, []);
+
+    useEffect(() => {
+        if (!user) return;
 
         fetchData();
 
@@ -81,7 +126,51 @@ export default function DashboardPage() {
         const channel = supabase
             .channel('atendimentos-realtime')
             .on('postgres_changes', {
-                event: '*',
+                event: 'INSERT',
+                schema: 'public',
+                table: 'atendimentos',
+            }, async (payload) => {
+                // Fetch the full atendimento with joins
+                const { data: fullAt } = await supabase
+                    .from('atendimentos')
+                    .select(`
+                        *,
+                        participante:participantes(*),
+                        medico:medicos(*),
+                        fotos:atendimento_fotos(*)
+                    `)
+                    .eq('id', payload.new.id)
+                    .single();
+
+                if (fullAt && initialLoadDone.current) {
+                    // Add to state
+                    setAtendimentos(prev => [fullAt, ...prev]);
+
+                    // Animate marker
+                    setNewMarkerIds(prev => [...prev, fullAt.id]);
+                    setTimeout(() => {
+                        setNewMarkerIds(prev => prev.filter(id => id !== fullAt.id));
+                    }, 3000);
+
+                    // Toast notification
+                    addToast(fullAt);
+
+                    // Flash stat cards
+                    flashStatCards();
+
+                    // Timeline animation
+                    setNewTimelineIds(prev => new Set(prev).add(fullAt.id));
+                    setTimeout(() => {
+                        setNewTimelineIds(prev => {
+                            const next = new Set(prev);
+                            next.delete(fullAt.id);
+                            return next;
+                        });
+                    }, 1000);
+                }
+            })
+            .on('postgres_changes', {
+                event: 'UPDATE',
                 schema: 'public',
                 table: 'atendimentos',
             }, () => {
@@ -92,13 +181,14 @@ export default function DashboardPage() {
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [user]);
+    }, [user, fetchData, addToast, flashStatCards]);
 
     const filteredAtendimentos = filtroGravidade === 'todos'
         ? atendimentos
         : atendimentos.filter((a) => a.gravidade === filtroGravidade);
 
     const countByGravidade = (g: Gravidade) => atendimentos.filter((a) => a.gravidade === g).length;
+    const countByStatus = (s: string) => atendimentos.filter((a) => a.status === s).length;
 
     if (authLoading || loading) {
         return (
@@ -111,6 +201,34 @@ export default function DashboardPage() {
 
     return (
         <>
+            {/* Toast Notifications */}
+            <div className="toast-container">
+                {toasts.map((toast) => (
+                    <div
+                        key={toast.id}
+                        className={`toast ${toast.exiting ? 'toast-exit' : ''}`}
+                        onClick={() => {
+                            const at = atendimentos.find(a => a.id === toast.id);
+                            if (at) setSelectedAtendimento(at);
+                        }}
+                    >
+                        <div
+                            className="toast-dot"
+                            style={{ background: GRAVIDADE_CONFIG[toast.gravidade]?.color || '#94a3b8' }}
+                        />
+                        <div className="toast-content">
+                            <div className="toast-title">
+                                {GRAVIDADE_CONFIG[toast.gravidade]?.icon} {toast.nome}
+                            </div>
+                            <div className="toast-subtitle">
+                                Dr(a). {toast.medico} • {GRAVIDADE_CONFIG[toast.gravidade]?.label}
+                            </div>
+                        </div>
+                        <div className="toast-time">{toast.time}</div>
+                    </div>
+                ))}
+            </div>
+
             {/* Navbar */}
             <nav className="navbar">
                 <div className="navbar-inner">
@@ -144,14 +262,32 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Stats */}
-                <div className="stats-grid">
-                    <div className="stat-card">
+                <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(5, 1fr)' }}>
+                    <div className={`stat-card ${flashCards.has('total') ? 'stat-flash' : ''}`}>
                         <div className="stat-icon" style={{ background: 'rgba(5,150,105,0.15)', color: 'var(--color-primary)' }}>
                             <Activity size={24} />
                         </div>
                         <div>
                             <div className="stat-value">{atendimentos.length}</div>
-                            <div className="stat-label">Total Atendimentos</div>
+                            <div className="stat-label">Total</div>
+                        </div>
+                    </div>
+                    <div className={`stat-card ${flashCards.has('andamento') ? 'stat-flash' : ''}`}>
+                        <div className="stat-icon" style={{ background: 'rgba(245,158,11,0.15)', color: '#f59e0b' }}>
+                            <Zap size={24} />
+                        </div>
+                        <div>
+                            <div className="stat-value">{countByStatus('em_andamento')}</div>
+                            <div className="stat-label">Em Andamento</div>
+                        </div>
+                    </div>
+                    <div className={`stat-card ${flashCards.has('criticos') ? 'stat-flash' : ''}`}>
+                        <div className="stat-icon" style={{ background: 'rgba(239,68,68,0.15)', color: '#ef4444' }}>
+                            <AlertTriangle size={24} />
+                        </div>
+                        <div>
+                            <div className="stat-value">{countByGravidade('critico') + countByGravidade('grave')}</div>
+                            <div className="stat-label">Graves / Críticos</div>
                         </div>
                     </div>
                     <div className="stat-card">
@@ -164,7 +300,7 @@ export default function DashboardPage() {
                         </div>
                     </div>
                     <div className="stat-card">
-                        <div className="stat-icon" style={{ background: 'rgba(245,158,11,0.15)', color: '#f59e0b' }}>
+                        <div className="stat-icon" style={{ background: 'rgba(168,85,247,0.15)', color: '#a855f7' }}>
                             <Stethoscope size={24} />
                         </div>
                         <div>
@@ -172,16 +308,39 @@ export default function DashboardPage() {
                             <div className="stat-label">Médicos</div>
                         </div>
                     </div>
-                    <div className="stat-card">
-                        <div className="stat-icon" style={{ background: 'rgba(239,68,68,0.15)', color: '#ef4444' }}>
-                            <AlertTriangle size={24} />
-                        </div>
-                        <div>
-                            <div className="stat-value">{countByGravidade('critico') + countByGravidade('grave')}</div>
-                            <div className="stat-label">Graves / Críticos</div>
+                </div>
+
+                {/* Timeline Feed */}
+                {atendimentos.length > 0 && (
+                    <div className="card-static" style={{ marginBottom: 24 }}>
+                        <h2 style={{
+                            fontFamily: 'var(--font-display)', fontSize: '1rem', marginBottom: 12,
+                            display: 'flex', alignItems: 'center', gap: 8, color: 'var(--color-text-secondary)'
+                        }}>
+                            <Clock size={16} color="var(--color-primary)" /> Últimos Atendimentos
+                        </h2>
+                        <div className="timeline-strip">
+                            {atendimentos.slice(0, 10).map((at) => (
+                                <div
+                                    key={at.id}
+                                    className={`timeline-item ${newTimelineIds.has(at.id) ? 'timeline-new' : ''}`}
+                                    onClick={() => setSelectedAtendimento(at)}
+                                >
+                                    <div className="timeline-time">
+                                        {new Date(at.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                                    </div>
+                                    <div className="timeline-name">{at.participante?.nome || '—'}</div>
+                                    <div className="timeline-meta">
+                                        <div className="timeline-meta-dot" style={{ background: GRAVIDADE_CONFIG[at.gravidade]?.color }} />
+                                        {GRAVIDADE_CONFIG[at.gravidade]?.label}
+                                        <span style={{ color: 'var(--color-text-muted)' }}>•</span>
+                                        Dr(a). {at.medico?.nome || '—'}
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
-                </div>
+                )}
 
                 {/* Map */}
                 <div className="card-static dashboard-full" style={{ marginBottom: 24 }}>
@@ -208,7 +367,11 @@ export default function DashboardPage() {
                             ))}
                         </div>
                     </div>
-                    <Map atendimentos={filteredAtendimentos} />
+                    <Map
+                        atendimentos={filteredAtendimentos}
+                        newMarkerIds={newMarkerIds}
+                        onMarkerClick={(at) => setSelectedAtendimento(at)}
+                    />
                 </div>
 
                 {/* Atendimentos List */}
@@ -402,6 +565,20 @@ export default function DashboardPage() {
                                         <div className="participant-info-item" style={{ gridColumn: '1 / -1' }}>
                                             <div className="participant-info-label">Condições Médicas</div>
                                             <div className="participant-info-value">{selectedAtendimento.participante.condicoes_medicas}</div>
+                                        </div>
+                                    )}
+                                    {selectedAtendimento.participante.indicativo_saude && (
+                                        <div className="participant-info-item" style={{ gridColumn: '1 / -1' }}>
+                                            <div className="participant-info-label">Indicativo de Saúde</div>
+                                            <div style={{ display: 'flex', gap: 3, marginTop: 4 }}>
+                                                {[1, 2, 3, 4, 5].map(lvl => (
+                                                    <div key={lvl} style={{
+                                                        flex: 1, height: 8, borderRadius: 2,
+                                                        background: [, '#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6'][lvl],
+                                                        opacity: lvl <= (selectedAtendimento.participante?.indicativo_saude || 0) ? 1 : 0.2,
+                                                    }} />
+                                                ))}
+                                            </div>
                                         </div>
                                     )}
                                 </div>
