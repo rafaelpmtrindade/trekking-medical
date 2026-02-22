@@ -40,6 +40,7 @@ function AtendimentoContent() {
     const [gps, setGps] = useState<GeoPosition | null>(null);
     const [gpsLoading, setGpsLoading] = useState(true);
     const [gpsError, setGpsError] = useState('');
+    const [debugInfo, setDebugInfo] = useState<any>({});
 
     // Form
     const [descricao, setDescricao] = useState('');
@@ -82,13 +83,25 @@ function AtendimentoContent() {
         async function fetchParticipante() {
             console.log('[DEBUG /a] Fetching participante from Supabase for tag:', tagId);
             setLoadingParticipante(true);
-            const { data, error } = await supabase
+            const { data, error, status } = await supabase
                 .from('participantes')
                 .select('*')
                 .eq('nfc_tag_id', tagId)
                 .single();
 
-            console.log('[DEBUG /a] Fetch result:', { data, error });
+            console.log('[DEBUG /a] Fetch result:', { data, error, status });
+
+            setDebugInfo({
+                tagSearched: tagId,
+                authLoading,
+                hasUser: !!user,
+                userId: user?.id,
+                hasMedico: !!medico,
+                medicoId: medico?.id,
+                error: error ? error.message : null,
+                status,
+                dataFound: !!data
+            });
 
             if (error || !data) {
                 console.log('[DEBUG /a] Participante not found or error occurred. Setting notFound:', true);
@@ -257,6 +270,11 @@ function AtendimentoContent() {
                     <p style={{ color: 'var(--color-text-secondary)' }}>
                         Tag NFC: <code>{tagId || 'não informada'}</code>
                     </p>
+
+                    <div style={{ marginTop: 24, padding: 16, background: 'rgba(255,0,0,0.1)', border: '1px solid rgba(255,0,0,0.2)', borderRadius: 8, textAlign: 'left', fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>
+                        <strong>Diagnostic Info:</strong>
+                        <pre style={{ overflowX: 'auto', marginTop: 8 }}>{JSON.stringify(debugInfo, null, 2)}</pre>
+                    </div>
                 </div>
             </div>
         );
