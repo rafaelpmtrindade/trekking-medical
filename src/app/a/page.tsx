@@ -56,23 +56,31 @@ function AtendimentoContent() {
 
     // Fetch participant by NFC tag
     useEffect(() => {
+        console.log('[DEBUG /a] useEffect triggered. tagId:', tagId, 'authLoading:', authLoading, 'user:', !!user, 'medico:', !!medico);
+
         if (!tagId) {
+            console.log('[DEBUG /a] No tagId present, setting notFound to true');
             setLoadingParticipante(false);
             setNotFound(true);
             return;
         }
 
         // Wait for auth to initialize before fetching to avoid RLS failures
-        if (authLoading) return;
+        if (authLoading) {
+            console.log('[DEBUG /a] authLoading is true, waiting...');
+            return;
+        }
 
         // If not authenticated OR not verified as a medico, don't fetch (RLS will block it). 
         // Just stop loading so the login screen can be shown.
         if (!user || !medico) {
+            console.log('[DEBUG /a] Blocking fetch: user or medico is missing. user:', !!user, 'medico:', !!medico);
             setLoadingParticipante(false);
             return;
         }
 
         async function fetchParticipante() {
+            console.log('[DEBUG /a] Fetching participante from Supabase for tag:', tagId);
             setLoadingParticipante(true);
             const { data, error } = await supabase
                 .from('participantes')
@@ -80,9 +88,13 @@ function AtendimentoContent() {
                 .eq('nfc_tag_id', tagId)
                 .single();
 
+            console.log('[DEBUG /a] Fetch result:', { data, error });
+
             if (error || !data) {
+                console.log('[DEBUG /a] Participante not found or error occurred. Setting notFound:', true);
                 setNotFound(true);
             } else {
+                console.log('[DEBUG /a] Participante found successfully!');
                 setParticipante(data);
                 setNotFound(false); // Make sure to reset notFound if it succeeds on retry
             }
