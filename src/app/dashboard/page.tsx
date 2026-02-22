@@ -194,7 +194,7 @@ export default function DashboardPage() {
             console.log('🔌 Desconectando canal Realtime...', channelName);
             supabase.removeChannel(channel);
         };
-    }, [user, fetchData, addToast, flashStatCards]);
+    }, [user]); // Removed fetchData, addToast, flashStatCards to prevent infinite reconnect loops
 
     const updateStatus = async (novoStatus: StatusAtendimento) => {
         if (!selectedAtendimento) return;
