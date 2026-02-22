@@ -22,6 +22,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [session, setSession] = useState<Session | null>(null);
     const [loading, setLoading] = useState(true);
 
+    async function fetchMedico(userId: string) {
+        const { data } = await supabase
+            .from('medicos')
+            .select('*')
+            .eq('id', userId)
+            .single();
+        setMedico(data);
+        setLoading(false);
+    }
+
     useEffect(() => {
         supabase.auth.getSession().then(({ data: { session } }) => {
             setSession(session);
@@ -47,15 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return () => subscription.unsubscribe();
     }, []);
 
-    async function fetchMedico(userId: string) {
-        const { data } = await supabase
-            .from('medicos')
-            .select('*')
-            .eq('id', userId)
-            .single();
-        setMedico(data);
-        setLoading(false);
-    }
+
 
     async function signIn(email: string, password: string) {
         const { error } = await supabase.auth.signInWithPassword({ email, password });

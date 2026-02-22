@@ -8,7 +8,7 @@ import type { Participante } from '@/types/database';
 import { MountainSnow, Search, Plus, Edit2, Trash2 } from 'lucide-react';
 
 export default function ParticipantesPage() {
-    const { user, medico, loading: authLoading } = useAuth();
+    const { user, loading: authLoading } = useAuth();
     const router = useRouter();
 
     const [participantes, setParticipantes] = useState<Participante[]>([]);
@@ -22,18 +22,13 @@ export default function ParticipantesPage() {
         nome: '', nfc_tag_id: '', cpf: '', idade: '',
         telefone: '', telefone_emergencia: '', contato_emergencia_nome: '',
         alergias: '', condicoes_medicas: '', medicamentos: '', tipo_sanguineo: '',
+        // Novas informações clínicas
+        peso: '', altura: '', cidade_estado: '', equipe_familia: '',
+        biotipo: '', indicativo_saude: '3', cirurgias: '', observacao_hakuna: '',
+        atividade_fisica_semanal: '', plano_saude: '', outras_informacoes_medicas: ''
     });
     const [formError, setFormError] = useState('');
     const [saving, setSaving] = useState(false);
-
-    useEffect(() => {
-        if (!authLoading && !user) router.push('/login');
-    }, [user, authLoading, router]);
-
-    useEffect(() => {
-        if (!user) return;
-        fetchParticipantes();
-    }, [user]);
 
     async function fetchParticipantes() {
         const { data } = await supabase
@@ -44,11 +39,24 @@ export default function ParticipantesPage() {
         setLoading(false);
     }
 
+    useEffect(() => {
+        if (!authLoading && !user) router.push('/login');
+    }, [user, authLoading, router]);
+
+    useEffect(() => {
+        if (!user) return;
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        fetchParticipantes();
+    }, [user]);
+
     function resetForm() {
         setForm({
             nome: '', nfc_tag_id: '', cpf: '', idade: '',
             telefone: '', telefone_emergencia: '', contato_emergencia_nome: '',
             alergias: '', condicoes_medicas: '', medicamentos: '', tipo_sanguineo: '',
+            peso: '', altura: '', cidade_estado: '', equipe_familia: '',
+            biotipo: '', indicativo_saude: '3', cirurgias: '', observacao_hakuna: '',
+            atividade_fisica_semanal: '', plano_saude: '', outras_informacoes_medicas: ''
         });
         setEditingId(null);
         setFormError('');
@@ -67,6 +75,17 @@ export default function ParticipantesPage() {
             condicoes_medicas: p.condicoes_medicas || '',
             medicamentos: p.medicamentos || '',
             tipo_sanguineo: p.tipo_sanguineo || '',
+            peso: p.peso?.toString() || '',
+            altura: p.altura?.toString() || '',
+            cidade_estado: p.cidade_estado || '',
+            equipe_familia: p.equipe_familia || '',
+            biotipo: p.biotipo || '',
+            indicativo_saude: p.indicativo_saude?.toString() || '3',
+            cirurgias: p.cirurgias || '',
+            observacao_hakuna: p.observacao_hakuna || '',
+            atividade_fisica_semanal: p.atividade_fisica_semanal || '',
+            plano_saude: p.plano_saude || '',
+            outras_informacoes_medicas: p.outras_informacoes_medicas || ''
         });
         setEditingId(p.id);
         setShowForm(true);
@@ -89,6 +108,17 @@ export default function ParticipantesPage() {
             condicoes_medicas: form.condicoes_medicas || null,
             medicamentos: form.medicamentos || null,
             tipo_sanguineo: form.tipo_sanguineo || null,
+            peso: form.peso ? parseFloat(form.peso.replace(',', '.')) : null,
+            altura: form.altura ? parseFloat(form.altura.replace(',', '.')) : null,
+            cidade_estado: form.cidade_estado || null,
+            equipe_familia: form.equipe_familia || null,
+            biotipo: form.biotipo || null,
+            indicativo_saude: parseInt(form.indicativo_saude),
+            cirurgias: form.cirurgias || null,
+            observacao_hakuna: form.observacao_hakuna || null,
+            atividade_fisica_semanal: form.atividade_fisica_semanal || null,
+            plano_saude: form.plano_saude || null,
+            outras_informacoes_medicas: form.outras_informacoes_medicas || null,
         };
 
         let error;
@@ -250,37 +280,128 @@ export default function ParticipantesPage() {
                                             onChange={(e) => setForm({ ...form, contato_emergencia_nome: e.target.value })} />
                                     </div>
                                     <div className="form-group">
-                                        <label className="form-label">Tel. Emergência</label>
+                                        <label className="form-label">Telefone de Emergência</label>
                                         <input className="form-input" value={form.telefone_emergencia}
                                             onChange={(e) => setForm({ ...form, telefone_emergencia: e.target.value })} />
                                     </div>
                                 </div>
 
+                                <div style={{ marginTop: 32, marginBottom: 16, borderBottom: '1px solid var(--color-border)', paddingBottom: 8 }}>
+                                    <h3 style={{ fontFamily: 'var(--font-display)', color: 'var(--color-text)' }}>Dados Complementares</h3>
+                                </div>
+
+                                <div className="form-row">
+                                    <div className="form-group">
+                                        <label className="form-label">Cidade / Estado</label>
+                                        <input className="form-input" value={form.cidade_estado}
+                                            placeholder="Ex: Caarapó - MS"
+                                            onChange={(e) => setForm({ ...form, cidade_estado: e.target.value })} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Equipe / Família</label>
+                                        <input className="form-input" value={form.equipe_familia}
+                                            placeholder="Ex: Família Silva"
+                                            onChange={(e) => setForm({ ...form, equipe_familia: e.target.value })} />
+                                    </div>
+                                </div>
+
+                                <div className="form-row">
+                                    <div className="form-group">
+                                        <label className="form-label">Peso (Kg)</label>
+                                        <input className="form-input" type="number" step="0.1" value={form.peso}
+                                            placeholder="Ex: 85.5"
+                                            onChange={(e) => setForm({ ...form, peso: e.target.value })} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Altura (m)</label>
+                                        <input className="form-input" type="number" step="0.01" value={form.altura}
+                                            placeholder="Ex: 1.80"
+                                            onChange={(e) => setForm({ ...form, altura: e.target.value })} />
+                                    </div>
+                                </div>
+
+                                <div className="form-row">
+                                    <div className="form-group">
+                                        <label className="form-label">Biotipo</label>
+                                        <input className="form-input" value={form.biotipo}
+                                            placeholder="Ex: magro-sedentário"
+                                            onChange={(e) => setForm({ ...form, biotipo: e.target.value })} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Indicativo de Saúde (1 a 5)</label>
+                                        <select className="form-select" value={form.indicativo_saude}
+                                            onChange={(e) => setForm({ ...form, indicativo_saude: e.target.value })}>
+                                            <option value="1">1 - Excelente/Atleta</option>
+                                            <option value="2">2 - Bom</option>
+                                            <option value="3">3 - Moderado/Intermediário</option>
+                                            <option value="4">4 - Atenção/Sedentário</option>
+                                            <option value="5">5 - Crítico/Alto Risco</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div style={{ marginTop: 32, marginBottom: 16, borderBottom: '1px solid var(--color-border)', paddingBottom: 8 }}>
+                                    <h3 style={{ fontFamily: 'var(--font-display)', color: 'var(--color-critico)' }}>Ficha Clínica Essencial</h3>
+                                </div>
+
                                 <div className="form-group">
-                                    <label className="form-label">Alergias</label>
-                                    <textarea className="form-textarea" value={form.alergias}
-                                        style={{ minHeight: 60 }}
-                                        placeholder="Descreva alergias conhecidas..."
+                                    <label className="form-label" style={{ color: 'var(--color-critico)' }}>Alergias / Restrições (Crítico)</label>
+                                    <textarea className="form-input" rows={2} value={form.alergias}
+                                        placeholder="Ex: Dipirona, Picada de Abelha, Nenhuma..."
                                         onChange={(e) => setForm({ ...form, alergias: e.target.value })} />
                                 </div>
 
                                 <div className="form-group">
-                                    <label className="form-label">Condições Médicas</label>
-                                    <textarea className="form-textarea" value={form.condicoes_medicas}
-                                        style={{ minHeight: 60 }}
-                                        placeholder="Diabetes, hipertensão, asma..."
+                                    <label className="form-label">Condições Médicas / Comorbidades</label>
+                                    <textarea className="form-input" rows={2} value={form.condicoes_medicas}
+                                        placeholder="Ex: Hipertensão, Diabetes, Asma..."
                                         onChange={(e) => setForm({ ...form, condicoes_medicas: e.target.value })} />
                                 </div>
 
                                 <div className="form-group">
-                                    <label className="form-label">Medicamentos em Uso</label>
-                                    <textarea className="form-textarea" value={form.medicamentos}
-                                        style={{ minHeight: 60 }}
-                                        placeholder="Medicamentos que está tomando..."
+                                    <label className="form-label">Cirurgias Anteriores</label>
+                                    <textarea className="form-input" rows={2} value={form.cirurgias}
+                                        placeholder="Ex: Apendicite (2018), Joelho Direito (2020)..."
+                                        onChange={(e) => setForm({ ...form, cirurgias: e.target.value })} />
+                                </div>
+
+                                <div className="form-group">
+                                    <label className="form-label">Uso Contínuo de Medicamentos</label>
+                                    <textarea className="form-input" rows={2} value={form.medicamentos}
+                                        placeholder="Ex: Losartana 50mg, Insulina..."
                                         onChange={(e) => setForm({ ...form, medicamentos: e.target.value })} />
                                 </div>
 
-                                <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+                                <div className="form-group">
+                                    <label className="form-label">Observação Restritiva (Laudo Hakuna)</label>
+                                    <textarea className="form-input" rows={2} value={form.observacao_hakuna}
+                                        placeholder="Regras de liberação para a montanha..."
+                                        onChange={(e) => setForm({ ...form, observacao_hakuna: e.target.value })} />
+                                </div>
+
+                                <div className="form-row">
+                                    <div className="form-group">
+                                        <label className="form-label">Plano de Saúde</label>
+                                        <input className="form-input" value={form.plano_saude}
+                                            placeholder="Ex: Unimed (Nacional)"
+                                            onChange={(e) => setForm({ ...form, plano_saude: e.target.value })} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Atividade Física Semanal</label>
+                                        <input className="form-input" value={form.atividade_fisica_semanal}
+                                            placeholder="Ex: Não Faço / 3x na semana"
+                                            onChange={(e) => setForm({ ...form, atividade_fisica_semanal: e.target.value })} />
+                                    </div>
+                                </div>
+
+                                <div className="form-group">
+                                    <label className="form-label">Outras Informações Médicas</label>
+                                    <textarea className="form-input" rows={3} value={form.outras_informacoes_medicas}
+                                        placeholder="Qualquer outro detalhe clínico relevante..."
+                                        onChange={(e) => setForm({ ...form, outras_informacoes_medicas: e.target.value })} />
+                                </div>
+
+                                <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 24 }}>
                                     <button type="button" className="btn btn-secondary"
                                         onClick={() => { setShowForm(false); resetForm(); }}>
                                         Cancelar
@@ -291,8 +412,9 @@ export default function ParticipantesPage() {
                                 </div>
                             </form>
                         </div>
-                    </div>
-                )}
+                    </div >
+                )
+                }
 
                 {/* Table */}
                 <div className="table-container">
@@ -333,12 +455,14 @@ export default function ParticipantesPage() {
                     </table>
                 </div>
 
-                {filtered.length === 0 && (
-                    <div style={{ textAlign: 'center', padding: 40, color: 'var(--color-text-muted)' }}>
-                        {search ? 'Nenhum participante encontrado.' : 'Nenhum participante cadastrado.'}
-                    </div>
-                )}
-            </div>
+                {
+                    filtered.length === 0 && (
+                        <div style={{ textAlign: 'center', padding: 40, color: 'var(--color-text-muted)' }}>
+                            {search ? 'Nenhum participante encontrado.' : 'Nenhum participante cadastrado.'}
+                        </div>
+                    )
+                }
+            </div >
         </>
     );
 }

@@ -25,7 +25,7 @@ import {
 const Map = dynamic(() => import('@/components/Map'), { ssr: false });
 
 export default function DashboardPage() {
-    const { user, medico, loading: authLoading } = useAuth();
+    const { user, loading: authLoading } = useAuth();
     const router = useRouter();
 
     const [atendimentos, setAtendimentos] = useState<Atendimento[]>([]);

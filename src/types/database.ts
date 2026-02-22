@@ -12,6 +12,20 @@ export interface Participante {
     medicamentos?: string;
     tipo_sanguineo?: string;
     foto_url?: string;
+
+    // Novas informações clínicas (Premium)
+    peso?: number;
+    altura?: number;
+    cidade_estado?: string;
+    equipe_familia?: string;
+    biotipo?: string;
+    indicativo_saude?: number; // 1 to 5 scale
+    cirurgias?: string;
+    observacao_hakuna?: string;
+    atividade_fisica_semanal?: string;
+    plano_saude?: string;
+    outras_informacoes_medicas?: string;
+
     created_at: string;
     updated_at: string;
 }

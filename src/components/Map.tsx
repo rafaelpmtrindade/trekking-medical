@@ -29,6 +29,7 @@ interface MapProps {
 
 function getMarkerIcon(gravidade: string) {
     if (typeof window === 'undefined') return undefined;
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const L = require('leaflet');
     const config = GRAVIDADE_CONFIG[gravidade as keyof typeof GRAVIDADE_CONFIG];
 

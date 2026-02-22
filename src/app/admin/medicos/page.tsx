@@ -8,7 +8,7 @@ import type { Medico } from '@/types/database';
 import { MountainSnow, Plus, Stethoscope, Star, Phone } from 'lucide-react';
 
 export default function MedicosPage() {
-    const { user, medico: currentMedico, loading: authLoading } = useAuth();
+    const { user, loading: authLoading } = useAuth();
     const router = useRouter();
 
     const [medicos, setMedicos] = useState<Medico[]>([]);
