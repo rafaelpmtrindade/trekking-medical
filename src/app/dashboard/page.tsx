@@ -264,11 +264,24 @@ export default function DashboardPage() {
             </nav>
 
             <div className="app-container">
-                <div className="page-header">
-                    <h1 className="page-title">Dashboard de Atendimentos</h1>
-                    <p className="page-subtitle">
-                        Monitoramento em tempo real dos atendimentos médicos
-                    </p>
+                <div className="page-header" style={{ position: 'relative', overflow: 'hidden', padding: '32px 24px', borderRadius: 'var(--radius-xl)', marginBottom: 32, background: 'linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(3,7,18,0) 100%)', border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-inner)' }}>
+                    <div style={{ position: 'relative', zIndex: 2 }}>
+                        <h1 className="page-title" style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: '2.5rem' }}>
+                            <span style={{
+                                background: 'linear-gradient(135deg, #34d399 0%, #059669 100%)',
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent',
+                                display: 'inline-block'
+                            }}>
+                                Dashboard
+                            </span>
+                        </h1>
+                        <p className="page-subtitle" style={{ fontSize: '1.1rem', color: '#94a3b8' }}>
+                            Monitoramento em tempo real dos atendimentos médicos
+                        </p>
+                    </div>
+                    {/* Decorative Background Elements */}
+                    <div style={{ position: 'absolute', top: '-50%', right: '-10%', width: '400px', height: '400px', background: 'radial-gradient(circle, rgba(16,185,129,0.08) 0%, transparent 70%)', filter: 'blur(40px)', zIndex: 1, pointerEvents: 'none' }} />
                 </div>
 
                 {/* Stats */}
@@ -411,22 +424,38 @@ export default function DashboardPage() {
                                 </thead>
                                 <tbody>
                                     {filteredAtendimentos.map((at) => (
-                                        <tr key={at.id}>
-                                            <td style={{ whiteSpace: 'nowrap' }}>
+                                        <tr key={at.id} style={{ cursor: 'pointer' }} onClick={() => setSelectedAtendimento(at)}>
+                                            <td style={{ whiteSpace: 'nowrap', color: 'var(--color-text-secondary)', fontWeight: 500 }}>
                                                 {new Date(at.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                                             </td>
                                             <td>
-                                                <strong>{at.participante?.nome}</strong>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                                    <div style={{
+                                                        width: 32, height: 32, borderRadius: 16,
+                                                        background: 'var(--color-bg)', border: '1px solid var(--color-border)',
+                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                        fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text-secondary)', flexShrink: 0
+                                                    }}>
+                                                        {at.participante?.nome?.charAt(0).toUpperCase()}
+                                                    </div>
+                                                    <strong style={{ fontSize: '0.95rem' }}>{at.participante?.nome}</strong>
+                                                </div>
                                             </td>
                                             <td>
-                                                <span className={`badge badge-${at.gravidade}`}>
+                                                <span className={`badge badge-${at.gravidade}`} style={{ padding: '4px 10px' }}>
                                                     {GRAVIDADE_CONFIG[at.gravidade]?.icon} {GRAVIDADE_CONFIG[at.gravidade]?.label}
                                                 </span>
                                             </td>
-                                            <td>{at.medico?.nome}</td>
+                                            <td style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem' }}>{at.medico?.nome}</td>
                                             <td>
                                                 <span style={{
-                                                    textTransform: 'capitalize',
+                                                    textTransform: 'uppercase',
+                                                    fontSize: '0.75rem',
+                                                    fontWeight: 600,
+                                                    padding: '4px 8px',
+                                                    borderRadius: 16,
+                                                    background: at.status === 'em_andamento' ? 'rgba(245,158,11,0.1)' :
+                                                        at.status === 'finalizado' ? 'rgba(34,197,94,0.1)' : 'rgba(14,165,233,0.1)',
                                                     color: at.status === 'em_andamento' ? '#f59e0b' :
                                                         at.status === 'finalizado' ? '#22c55e' : '#0ea5e9'
                                                 }}>
@@ -437,9 +466,9 @@ export default function DashboardPage() {
                                             <td>
                                                 <button
                                                     className="btn btn-sm btn-secondary"
-                                                    onClick={() => setSelectedAtendimento(at)}
+                                                    style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)' }}
                                                 >
-                                                    Detalhes
+                                                    Abrir
                                                 </button>
                                             </td>
                                         </tr>
