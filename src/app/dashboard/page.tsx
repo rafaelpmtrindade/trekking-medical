@@ -118,75 +118,101 @@ export default function DashboardPage() {
         setTimeout(() => setFlashCards(new Set()), 800);
     }, []);
 
-    // Auto-polling: refresh data every 5 seconds for guaranteed real-time updates
+    // Initial data load
+    useEffect(() => {
+        if (!user) return;
+        fetchData();
+    }, [user, fetchData]);
+
+    // Refs for callbacks to avoid stale closures in the Realtime handler
+    const addToastRef = useRef(addToast);
+    const flashStatCardsRef = useRef(flashStatCards);
+    const fetchDataRef = useRef(fetchData);
+    useEffect(() => { addToastRef.current = addToast; }, [addToast]);
+    useEffect(() => { flashStatCardsRef.current = flashStatCards; }, [flashStatCards]);
+    useEffect(() => { fetchDataRef.current = fetchData; }, [fetchData]);
+
+    // Supabase Realtime subscription
     useEffect(() => {
         if (!user) return;
 
-        fetchData();
+        const channel = supabase
+            .channel('schema-db-changes')
+            .on(
+                'postgres_changes',
+                {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'atendimentos',
+                },
+                async (payload) => {
+                    console.log('🔥 Realtime INSERT recebido:', payload);
 
-        const previousIds = { current: new Set<string>() };
+                    // Fetch the full atendimento with all joins
+                    const { data: fullAt, error } = await supabase
+                        .from('atendimentos')
+                        .select(`
+                            *,
+                            participante:participantes(*),
+                            medico:medicos(*),
+                            fotos:atendimento_fotos(*)
+                        `)
+                        .eq('id', payload.new.id)
+                        .single();
 
-        const pollInterval = setInterval(async () => {
-            const { data: atData } = await supabase
-                .from('atendimentos')
-                .select(`
-                    *,
-                    participante:participantes(*),
-                    medico:medicos(*),
-                    fotos:atendimento_fotos(*)
-                `)
-                .order('created_at', { ascending: false });
+                    if (error) {
+                        console.error('❌ Erro ao buscar atendimento completo:', error);
+                        return;
+                    }
 
-            if (atData) {
-                // Detect new atendimentos (ones not in the previous set)
-                const currentIds = new Set(atData.map(a => a.id));
+                    if (fullAt && initialLoadDone.current) {
+                        // Add to state, preventing duplicates
+                        setAtendimentos(prev => {
+                            if (prev.some(a => a.id === fullAt.id)) return prev;
+                            return [fullAt, ...prev];
+                        });
 
-                if (previousIds.current.size > 0) {
-                    const newItems = atData.filter(a => !previousIds.current.has(a.id));
-
-                    for (const newAt of newItems) {
                         // Animate marker
-                        setNewMarkerIds(prev => [...prev, newAt.id]);
-                        setTimeout(() => setNewMarkerIds(prev => prev.filter(id => id !== newAt.id)), 3000);
+                        setNewMarkerIds(prev => [...prev, fullAt.id]);
+                        setTimeout(() => setNewMarkerIds(prev => prev.filter(id => id !== fullAt.id)), 3000);
 
                         // Toast notification
-                        addToast(newAt);
+                        addToastRef.current(fullAt);
+
+                        // Flash stat cards
+                        flashStatCardsRef.current();
 
                         // Timeline animation
-                        setNewTimelineIds(prev => new Set(prev).add(newAt.id));
+                        setNewTimelineIds(prev => new Set(prev).add(fullAt.id));
                         setTimeout(() => {
                             setNewTimelineIds(prev => {
                                 const next = new Set(prev);
-                                next.delete(newAt.id);
+                                next.delete(fullAt.id);
                                 return next;
                             });
                         }, 1000);
                     }
-
-                    if (newItems.length > 0) {
-                        flashStatCards();
-                    }
                 }
-
-                previousIds.current = currentIds;
-                setAtendimentos(atData);
-            }
-
-            // Also refresh counts
-            const { count: partCount } = await supabase
-                .from('participantes')
-                .select('*', { count: 'exact', head: true });
-            const { count: medCount } = await supabase
-                .from('medicos')
-                .select('*', { count: 'exact', head: true });
-            setTotalParticipantes(partCount || 0);
-            setTotalMedicos(medCount || 0);
-        }, 5000);
-
-        console.log('🔄 Auto-polling ativo: atualizando a cada 5 segundos');
+            )
+            .on(
+                'postgres_changes',
+                {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'atendimentos',
+                },
+                () => {
+                    console.log('🔄 Realtime UPDATE recebido');
+                    fetchDataRef.current();
+                }
+            )
+            .subscribe((status, err) => {
+                console.log('📡 Realtime status:', status);
+                if (err) console.error('❌ Realtime error:', err);
+            });
 
         return () => {
-            clearInterval(pollInterval);
+            supabase.removeChannel(channel);
         };
     }, [user]);
 
