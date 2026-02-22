@@ -48,9 +48,9 @@ function AtendimentoContent() {
         // Wait for auth to initialize before fetching to avoid RLS failures
         if (authLoading) return;
 
-        // If not authenticated, don't fetch (RLS will block it). 
+        // If not authenticated OR not verified as a medico, don't fetch (RLS will block it). 
         // Just stop loading so the login screen can be shown.
-        if (!user) {
+        if (!user || !medico) {
             setLoadingParticipante(false);
             return;
         }
@@ -73,7 +73,7 @@ function AtendimentoContent() {
         }
 
         fetchParticipante();
-    }, [tagId, authLoading, user]);
+    }, [tagId, authLoading, user, medico]);
 
     // Get GPS on mount
     useEffect(() => {
