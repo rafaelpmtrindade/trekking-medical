@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import type { Medico } from '@/types/database';
+import { MountainSnow, Plus, Stethoscope, Star, Phone } from 'lucide-react';
 
 export default function MedicosPage() {
     const { user, medico: currentMedico, loading: authLoading } = useAuth();
@@ -89,7 +90,7 @@ export default function MedicosPage() {
             <nav className="navbar">
                 <div className="navbar-inner">
                     <a className="navbar-brand" href="/dashboard">
-                        <span className="navbar-brand-icon">🏔️</span>
+                        <span className="navbar-brand-icon"><MountainSnow size={24} /></span>
                         <span className="navbar-brand-text">Trekking Medical</span>
                     </a>
                     <div className="navbar-links">
@@ -107,8 +108,8 @@ export default function MedicosPage() {
                 </div>
 
                 <div style={{ marginBottom: 24 }}>
-                    <button className="btn btn-primary" onClick={() => setShowForm(true)}>
-                        ➕ Novo Médico
+                    <button className="btn btn-primary" onClick={() => setShowForm(true)} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <Plus size={18} /> Novo Médico
                     </button>
                 </div>
 
@@ -127,8 +128,8 @@ export default function MedicosPage() {
                             style={{ maxWidth: 500, width: '100%' }}
                             onClick={(e) => e.stopPropagation()}
                         >
-                            <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: 24 }}>
-                                ➕ Cadastrar Médico
+                            <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <Plus size={24} color="var(--color-primary)" /> Cadastrar Médico
                             </h2>
 
                             {formError && (
@@ -219,22 +220,24 @@ export default function MedicosPage() {
                                     <span className="badge" style={{
                                         background: 'rgba(14,165,233,0.15)', color: '#0ea5e9',
                                         border: '1px solid rgba(14,165,233,0.3)',
+                                        display: 'flex', alignItems: 'center', gap: 6
                                     }}>
-                                        🩺 {m.especialidade}
+                                        <Stethoscope size={14} /> {m.especialidade}
                                     </span>
                                 )}
                                 {m.is_admin && (
                                     <span className="badge" style={{
                                         background: 'rgba(245,158,11,0.15)', color: '#f59e0b',
                                         border: '1px solid rgba(245,158,11,0.3)',
+                                        display: 'flex', alignItems: 'center', gap: 6
                                     }}>
-                                        ⭐ Admin
+                                        <Star size={14} /> Admin
                                     </span>
                                 )}
                             </div>
                             {m.telefone && (
-                                <p style={{ marginTop: 12, color: 'var(--color-text-secondary)', fontSize: '0.85rem' }}>
-                                    📱 {m.telefone}
+                                <p style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 6, color: 'var(--color-text-secondary)', fontSize: '0.85rem' }}>
+                                    <Phone size={14} /> {m.telefone}
                                 </p>
                             )}
                         </div>

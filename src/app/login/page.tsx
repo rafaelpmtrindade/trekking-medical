@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
+import { MountainSnow, Lock } from 'lucide-react';
 
 export default function LoginPage() {
     const [email, setEmail] = useState('');
@@ -30,7 +31,7 @@ export default function LoginPage() {
         <div className="login-container">
             <div className="login-card">
                 <div className="login-header">
-                    <span className="login-icon">🏔️</span>
+                    <span className="login-icon"><MountainSnow size={48} /></span>
                     <h1 className="login-title">Trekking Medical</h1>
                     <p className="login-subtitle">Sistema de Monitoramento Médico</p>
                 </div>
@@ -68,7 +69,8 @@ export default function LoginPage() {
                         style={{ width: '100%' }}
                         disabled={loading}
                     >
-                        {loading ? 'Entrando...' : '🔐 Entrar'}
+                        <Lock size={18} />
+                        {loading ? 'Entrando...' : 'Entrar'}
                     </button>
                 </form>
             </div>

@@ -7,6 +7,20 @@ import { useAuth } from '@/contexts/AuthContext';
 import dynamic from 'next/dynamic';
 import type { Atendimento } from '@/types/database';
 import { GRAVIDADE_CONFIG, Gravidade } from '@/types/database';
+import {
+    MountainSnow,
+    Activity,
+    Users,
+    Stethoscope,
+    AlertTriangle,
+    MapPin,
+    List,
+    InboxIcon,
+    Image as ImageIcon,
+    X,
+    Info,
+    FileText
+} from 'lucide-react';
 
 const Map = dynamic(() => import('@/components/Map'), { ssr: false });
 
@@ -101,7 +115,7 @@ export default function DashboardPage() {
             <nav className="navbar">
                 <div className="navbar-inner">
                     <a className="navbar-brand" href="/dashboard">
-                        <span className="navbar-brand-icon">🏔️</span>
+                        <span className="navbar-brand-icon"><MountainSnow size={24} /></span>
                         <span className="navbar-brand-text">Trekking Medical</span>
                     </a>
                     <div className="navbar-links">
@@ -133,7 +147,7 @@ export default function DashboardPage() {
                 <div className="stats-grid">
                     <div className="stat-card">
                         <div className="stat-icon" style={{ background: 'rgba(5,150,105,0.15)', color: 'var(--color-primary)' }}>
-                            📊
+                            <Activity size={24} />
                         </div>
                         <div>
                             <div className="stat-value">{atendimentos.length}</div>
@@ -142,7 +156,7 @@ export default function DashboardPage() {
                     </div>
                     <div className="stat-card">
                         <div className="stat-icon" style={{ background: 'rgba(14,165,233,0.15)', color: 'var(--color-accent)' }}>
-                            👥
+                            <Users size={24} />
                         </div>
                         <div>
                             <div className="stat-value">{totalParticipantes}</div>
@@ -151,7 +165,7 @@ export default function DashboardPage() {
                     </div>
                     <div className="stat-card">
                         <div className="stat-icon" style={{ background: 'rgba(245,158,11,0.15)', color: '#f59e0b' }}>
-                            🩺
+                            <Stethoscope size={24} />
                         </div>
                         <div>
                             <div className="stat-value">{totalMedicos}</div>
@@ -160,7 +174,7 @@ export default function DashboardPage() {
                     </div>
                     <div className="stat-card">
                         <div className="stat-icon" style={{ background: 'rgba(239,68,68,0.15)', color: '#ef4444' }}>
-                            🔴
+                            <AlertTriangle size={24} />
                         </div>
                         <div>
                             <div className="stat-value">{countByGravidade('critico') + countByGravidade('grave')}</div>
@@ -172,8 +186,8 @@ export default function DashboardPage() {
                 {/* Map */}
                 <div className="card-static dashboard-full" style={{ marginBottom: 24 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.2rem' }}>
-                            🗺️ Mapa de Atendimentos
+                        <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <MapPin size={20} color="var(--color-primary)" /> Mapa de Atendimentos
                         </h2>
                         <div style={{ display: 'flex', gap: 8 }}>
                             <button
@@ -199,13 +213,13 @@ export default function DashboardPage() {
 
                 {/* Atendimentos List */}
                 <div className="card-static" style={{ marginBottom: 32 }}>
-                    <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.2rem', marginBottom: 16 }}>
-                        📋 Lista de Atendimentos ({filteredAtendimentos.length})
+                    <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.2rem', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <List size={20} color="var(--color-primary)" /> Lista de Atendimentos ({filteredAtendimentos.length})
                     </h2>
 
                     {filteredAtendimentos.length === 0 ? (
                         <div style={{ textAlign: 'center', padding: 40, color: 'var(--color-text-muted)' }}>
-                            <span style={{ fontSize: '3rem', display: 'block', marginBottom: 12 }}>📭</span>
+                            <center><InboxIcon size={48} style={{ marginBottom: 12, opacity: 0.5 }} /></center>
                             Nenhum atendimento registrado ainda.
                         </div>
                     ) : (
@@ -246,7 +260,7 @@ export default function DashboardPage() {
                                                     {at.status?.replace('_', ' ')}
                                                 </span>
                                             </td>
-                                            <td>{at.fotos?.length || 0} 📷</td>
+                                            <td style={{ display: 'flex', gap: 6, alignItems: 'center', padding: '16px' }}>{at.fotos?.length || 0} <ImageIcon size={16} /></td>
                                             <td>
                                                 <button
                                                     className="btn btn-sm btn-secondary"
@@ -298,26 +312,28 @@ export default function DashboardPage() {
                                 className="btn btn-icon btn-secondary"
                                 onClick={() => setSelectedAtendimento(null)}
                             >
-                                ✕
+                                <X size={20} />
                             </button>
                         </div>
 
                         <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
                             <span className={`badge badge-${selectedAtendimento.gravidade}`}>
-                                {GRAVIDADE_CONFIG[selectedAtendimento.gravidade]?.icon}{' '}
                                 {GRAVIDADE_CONFIG[selectedAtendimento.gravidade]?.label}
                             </span>
                             <span className="badge" style={{
                                 background: 'rgba(148,163,184,0.15)',
                                 color: '#94a3b8',
                                 border: '1px solid rgba(148,163,184,0.3)',
+                                display: 'flex',
+                                gap: 6,
+                                alignItems: 'center'
                             }}>
-                                🩺 Dr(a). {selectedAtendimento.medico?.nome}
+                                <Stethoscope size={14} /> Dr(a). {selectedAtendimento.medico?.nome}
                             </span>
                         </div>
 
                         <div className="form-group">
-                            <label className="form-label">Descrição</label>
+                            <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}><FileText size={14} /> Descrição</label>
                             <p style={{ lineHeight: 1.6 }}>{selectedAtendimento.descricao}</p>
                         </div>
 
@@ -331,9 +347,8 @@ export default function DashboardPage() {
                         )}
 
                         <div className="form-group">
-                            <label className="form-label">Localização</label>
+                            <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}><MapPin size={14} /> Localização</label>
                             <p style={{ fontFamily: 'monospace', fontSize: '0.85rem', color: 'var(--color-accent)' }}>
-                                📍 {selectedAtendimento.latitude.toFixed(6)}, {selectedAtendimento.longitude.toFixed(6)}
                                 {selectedAtendimento.altitude && ` | Alt: ${selectedAtendimento.altitude.toFixed(0)}m`}
                                 {selectedAtendimento.precisao_gps && ` | ±${selectedAtendimento.precisao_gps.toFixed(0)}m`}
                             </p>
@@ -363,7 +378,7 @@ export default function DashboardPage() {
                         {/* Participant medical info */}
                         {selectedAtendimento.participante && (
                             <div style={{ marginTop: 16, padding: 16, background: 'var(--color-bg)', borderRadius: 'var(--radius-sm)' }}>
-                                <label className="form-label" style={{ marginBottom: 12 }}>Dados do Participante</label>
+                                <label className="form-label" style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}><Info size={14} /> Dados do Participante</label>
                                 <div className="participant-info-grid">
                                     {selectedAtendimento.participante.idade && (
                                         <div className="participant-info-item">

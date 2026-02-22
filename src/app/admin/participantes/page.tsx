@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import type { Participante } from '@/types/database';
+import { MountainSnow, Search, Plus, Edit2, Trash2 } from 'lucide-react';
 
 export default function ParticipantesPage() {
     const { user, medico, loading: authLoading } = useAuth();
@@ -134,7 +135,7 @@ export default function ParticipantesPage() {
             <nav className="navbar">
                 <div className="navbar-inner">
                     <a className="navbar-brand" href="/dashboard">
-                        <span className="navbar-brand-icon">🏔️</span>
+                        <span className="navbar-brand-icon"><MountainSnow size={24} /></span>
                         <span className="navbar-brand-text">Trekking Medical</span>
                     </a>
                     <div className="navbar-links">
@@ -153,19 +154,23 @@ export default function ParticipantesPage() {
 
                 {/* Actions */}
                 <div style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
-                    <input
-                        type="text"
-                        className="form-input"
-                        placeholder="🔍 Buscar por nome ou tag NFC..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        style={{ maxWidth: 400 }}
-                    />
+                    <div style={{ position: 'relative', flex: 1, maxWidth: 400 }}>
+                        <Search size={18} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }} />
+                        <input
+                            type="text"
+                            className="form-input"
+                            placeholder="Buscar por nome ou tag NFC..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            style={{ paddingLeft: 40, width: '100%' }}
+                        />
+                    </div>
                     <button
                         className="btn btn-primary"
                         onClick={() => { resetForm(); setShowForm(true); }}
+                        style={{ display: 'flex', alignItems: 'center', gap: 8 }}
                     >
-                        ➕ Novo Participante
+                        <Plus size={18} /> Novo Participante
                     </button>
                 </div>
 
@@ -184,8 +189,9 @@ export default function ParticipantesPage() {
                             style={{ maxWidth: 600, width: '100%', maxHeight: '85vh', overflow: 'auto' }}
                             onClick={(e) => e.stopPropagation()}
                         >
-                            <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: 24 }}>
-                                {editingId ? '✏️ Editar Participante' : '➕ Novo Participante'}
+                            <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 8 }}>
+                                {editingId ? <Edit2 size={24} color="var(--color-primary)" /> : <Plus size={24} color="var(--color-primary)" />}
+                                {editingId ? 'Editar Participante' : 'Novo Participante'}
                             </h2>
 
                             {formError && <div className="alert-danger" style={{ marginBottom: 16 }}>{formError}</div>}
@@ -313,11 +319,11 @@ export default function ParticipantesPage() {
                                     </td>
                                     <td>
                                         <div style={{ display: 'flex', gap: 8 }}>
-                                            <button className="btn btn-sm btn-secondary" onClick={() => handleEdit(p)}>
-                                                ✏️
+                                            <button className="btn btn-sm btn-secondary" title="Editar" onClick={() => handleEdit(p)}>
+                                                <Edit2 size={16} />
                                             </button>
-                                            <button className="btn btn-sm btn-danger" onClick={() => handleDelete(p.id)}>
-                                                🗑️
+                                            <button className="btn btn-sm btn-danger" title="Excluir" onClick={() => handleDelete(p.id)}>
+                                                <Trash2 size={16} />
                                             </button>
                                         </div>
                                     </td>

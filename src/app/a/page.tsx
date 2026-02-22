@@ -8,6 +8,23 @@ import { getCurrentPosition, GeoPosition } from '@/lib/geolocation';
 import type { Participante, Gravidade } from '@/types/database';
 import { GRAVIDADE_CONFIG } from '@/types/database';
 import imageCompression from 'browser-image-compression';
+import {
+    MountainSnow,
+    Lock,
+    XOctagon,
+    CheckCircle,
+    ClipboardList,
+    BarChart2,
+    MapPin,
+    Tag,
+    AlertTriangle,
+    Pill,
+    Syringe,
+    Camera,
+    X,
+    FileText,
+    Loader2
+} from 'lucide-react';
 
 function AtendimentoContent() {
     const searchParams = useSearchParams();
@@ -201,7 +218,7 @@ function AtendimentoContent() {
             <div className="mobile-container">
                 <div className="login-card" style={{ maxWidth: 400, margin: '40px auto' }}>
                     <div className="login-header">
-                        <span className="login-icon">🔐</span>
+                        <span className="login-icon"><Lock size={48} /></span>
                         <h1 className="login-title">Acesso Restrito</h1>
                         <p className="login-subtitle">Faça login para registrar atendimentos</p>
                     </div>
@@ -221,7 +238,7 @@ function AtendimentoContent() {
         return (
             <div className="mobile-container">
                 <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-                    <span style={{ fontSize: '4rem', display: 'block', marginBottom: 16 }}>❌</span>
+                    <span style={{ display: 'flex', justifyContent: 'center', marginBottom: 16, color: 'var(--color-critico)' }}><XOctagon size={64} /></span>
                     <h2 style={{ fontFamily: 'var(--font-display)', marginBottom: 8 }}>
                         Participante não encontrado
                     </h2>
@@ -237,7 +254,7 @@ function AtendimentoContent() {
         return (
             <div className="mobile-container">
                 <div className="success-container" style={{ paddingTop: '80px' }}>
-                    <span className="success-icon">✅</span>
+                    <span className="success-icon" style={{ display: 'flex', justifyContent: 'center', color: 'var(--color-leve)' }}><CheckCircle size={64} /></span>
                     <h2 className="success-title">Atendimento Registrado!</h2>
                     <p className="success-message">
                         Dados de {participante?.nome} salvos com sucesso.
@@ -254,13 +271,13 @@ function AtendimentoContent() {
                                 setFotoPreviews([]);
                             }}
                         >
-                            📋 Novo Atendimento (mesmo participante)
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><ClipboardList size={20} /> Novo Atendimento (mesmo)</span>
                         </button>
                         <button
                             className="btn btn-secondary btn-lg"
                             onClick={() => router.push('/dashboard')}
                         >
-                            📊 Ver Dashboard
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><BarChart2 size={20} /> Ver Dashboard</span>
                         </button>
                     </div>
                 </div>
@@ -273,8 +290,8 @@ function AtendimentoContent() {
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
                 <div>
-                    <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', fontWeight: 700 }}>
-                        🏔️ Atendimento
+                    <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <MountainSnow size={24} color="var(--color-primary)" /> Atendimento
                     </h1>
                     <p style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem' }}>
                         Dr(a). {medico.nome}
@@ -287,7 +304,7 @@ function AtendimentoContent() {
                 <span className={`gps-dot ${gpsLoading ? 'loading' : gpsError ? 'error' : 'active'}`} />
                 {gpsLoading ? 'Obtendo localização...' :
                     gpsError ? gpsError :
-                        `📍 GPS: ${gps?.latitude.toFixed(6)}, ${gps?.longitude.toFixed(6)} (±${gps?.accuracy.toFixed(0)}m)`}
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><MapPin size={14} /> GPS: {gps?.latitude.toFixed(6)}, {gps?.longitude.toFixed(6)} (±{gps?.accuracy.toFixed(0)}m)</span>}
             </div>
 
             {/* Participant Card */}
@@ -298,7 +315,7 @@ function AtendimentoContent() {
                     </div>
                     <div>
                         <div className="participant-name">{participante?.nome}</div>
-                        <div className="participant-tag">🏷️ {participante?.nfc_tag_id}</div>
+                        <div className="participant-tag" style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Tag size={12} /> {participante?.nfc_tag_id}</div>
                     </div>
                 </div>
 
@@ -331,19 +348,19 @@ function AtendimentoContent() {
 
                 {participante?.alergias && (
                     <div className="alert-danger" style={{ marginTop: 12 }}>
-                        <span>⚠️</span>
+                        <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: 2 }} />
                         <div><strong>Alergias:</strong> {participante.alergias}</div>
                     </div>
                 )}
                 {participante?.condicoes_medicas && (
                     <div className="alert-warning">
-                        <span>💊</span>
+                        <Pill size={16} style={{ flexShrink: 0, marginTop: 2 }} />
                         <div><strong>Condições:</strong> {participante.condicoes_medicas}</div>
                     </div>
                 )}
                 {participante?.medicamentos && (
                     <div className="alert-info">
-                        <span>💉</span>
+                        <Syringe size={16} style={{ flexShrink: 0, marginTop: 2 }} />
                         <div><strong>Medicamentos:</strong> {participante.medicamentos}</div>
                     </div>
                 )}
@@ -352,8 +369,8 @@ function AtendimentoContent() {
             {/* Atendimento Form */}
             <form onSubmit={handleSubmit}>
                 <div className="card-static" style={{ marginBottom: 20 }}>
-                    <h3 style={{ fontFamily: 'var(--font-display)', marginBottom: 20, fontSize: '1.1rem' }}>
-                        📝 Registro do Atendimento
+                    <h3 style={{ fontFamily: 'var(--font-display)', marginBottom: 20, fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <FileText size={20} color="var(--color-primary)" /> Registro do Atendimento
                     </h3>
 
                     {/* Severity Selector */}
@@ -405,8 +422,8 @@ function AtendimentoContent() {
 
                 {/* Photos */}
                 <div className="card-static" style={{ marginBottom: 24 }}>
-                    <h3 style={{ fontFamily: 'var(--font-display)', marginBottom: 16, fontSize: '1.1rem' }}>
-                        📷 Fotos
+                    <h3 style={{ fontFamily: 'var(--font-display)', marginBottom: 16, fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <Camera size={20} color="var(--color-primary)" /> Fotos
                     </h3>
 
                     <input
@@ -423,7 +440,7 @@ function AtendimentoContent() {
                         className="photo-upload-area"
                         onClick={() => fileInputRef.current?.click()}
                     >
-                        <div className="photo-upload-icon">📸</div>
+                        <div className="photo-upload-icon"><Camera size={32} /></div>
                         <div className="photo-upload-text">
                             Toque para tirar foto ou selecionar da galeria
                         </div>
@@ -439,7 +456,7 @@ function AtendimentoContent() {
                                         className="photo-preview-remove"
                                         onClick={() => removePhoto(i)}
                                     >
-                                        ✕
+                                        <X size={14} />
                                     </button>
                                 </div>
                             ))}
@@ -449,7 +466,7 @@ function AtendimentoContent() {
 
                 {submitError && (
                     <div className="alert-danger" style={{ marginBottom: 16 }}>
-                        <span>❌</span>
+                        <XOctagon size={16} style={{ flexShrink: 0, marginTop: 2 }} />
                         <div>{submitError}</div>
                     </div>
                 )}
@@ -458,12 +475,12 @@ function AtendimentoContent() {
                 <button
                     type="submit"
                     className="btn btn-primary btn-lg"
-                    style={{ width: '100%' }}
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
                     disabled={submitting || !gps || gpsLoading}
                 >
-                    {submitting ? '⏳ Salvando...' :
-                        !gps ? '📍 Aguardando GPS...' :
-                            '✅ Registrar Atendimento'}
+                    {submitting ? <><Loader2 className="animate-spin" size={20} /> Salvando...</> :
+                        !gps ? <><MapPin size={20} /> Aguardando GPS...</> :
+                            <><CheckCircle size={20} /> Registrar Atendimento</>}
                 </button>
             </form>
         </div>
