@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import dynamic from 'next/dynamic';
-import type { Atendimento } from '@/types/database';
+import type { Atendimento, StatusAtendimento } from '@/types/database';
 import { GRAVIDADE_CONFIG, Gravidade } from '@/types/database';
+import ParticipantProfile from '@/components/ParticipantProfile';
 import {
     MountainSnow,
     Activity,
@@ -182,6 +183,15 @@ export default function DashboardPage() {
             supabase.removeChannel(channel);
         };
     }, [user, fetchData, addToast, flashStatCards]);
+
+    const updateStatus = async (novoStatus: StatusAtendimento) => {
+        if (!selectedAtendimento) return;
+        const { error } = await supabase.from('atendimentos').update({ status: novoStatus }).eq('id', selectedAtendimento.id);
+        if (!error) {
+            setSelectedAtendimento({ ...selectedAtendimento, status: novoStatus });
+            fetchData();
+        }
+    };
 
     const filteredAtendimentos = filtroGravidade === 'todos'
         ? atendimentos
@@ -493,6 +503,15 @@ export default function DashboardPage() {
                             }}>
                                 <Stethoscope size={14} /> Dr(a). {selectedAtendimento.medico?.nome}
                             </span>
+                            <span style={{
+                                padding: '4px 8px', borderRadius: 16, fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase',
+                                background: selectedAtendimento.status === 'em_andamento' ? 'rgba(245,158,11,0.15)' :
+                                    selectedAtendimento.status === 'finalizado' ? 'rgba(34,197,94,0.15)' : 'rgba(14,165,233,0.15)',
+                                color: selectedAtendimento.status === 'em_andamento' ? '#f59e0b' :
+                                    selectedAtendimento.status === 'finalizado' ? '#22c55e' : '#0ea5e9'
+                            }}>
+                                {selectedAtendimento.status?.replace('_', ' ')}
+                            </span>
                         </div>
 
                         <div className="form-group">
@@ -540,50 +559,26 @@ export default function DashboardPage() {
 
                         {/* Participant medical info */}
                         {selectedAtendimento.participante && (
-                            <div style={{ marginTop: 16, padding: 16, background: 'var(--color-bg)', borderRadius: 'var(--radius-sm)' }}>
-                                <label className="form-label" style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}><Info size={14} /> Dados do Participante</label>
-                                <div className="participant-info-grid">
-                                    {selectedAtendimento.participante.idade && (
-                                        <div className="participant-info-item">
-                                            <div className="participant-info-label">Idade</div>
-                                            <div className="participant-info-value">{selectedAtendimento.participante.idade} anos</div>
-                                        </div>
-                                    )}
-                                    {selectedAtendimento.participante.tipo_sanguineo && (
-                                        <div className="participant-info-item">
-                                            <div className="participant-info-label">Tipo Sanguíneo</div>
-                                            <div className="participant-info-value">{selectedAtendimento.participante.tipo_sanguineo}</div>
-                                        </div>
-                                    )}
-                                    {selectedAtendimento.participante.alergias && (
-                                        <div className="participant-info-item" style={{ gridColumn: '1 / -1' }}>
-                                            <div className="participant-info-label">Alergias</div>
-                                            <div className="participant-info-value" style={{ color: '#ef4444' }}>{selectedAtendimento.participante.alergias}</div>
-                                        </div>
-                                    )}
-                                    {selectedAtendimento.participante.condicoes_medicas && (
-                                        <div className="participant-info-item" style={{ gridColumn: '1 / -1' }}>
-                                            <div className="participant-info-label">Condições Médicas</div>
-                                            <div className="participant-info-value">{selectedAtendimento.participante.condicoes_medicas}</div>
-                                        </div>
-                                    )}
-                                    {selectedAtendimento.participante.indicativo_saude && (
-                                        <div className="participant-info-item" style={{ gridColumn: '1 / -1' }}>
-                                            <div className="participant-info-label">Indicativo de Saúde</div>
-                                            <div style={{ display: 'flex', gap: 3, marginTop: 4 }}>
-                                                {[1, 2, 3, 4, 5].map(lvl => (
-                                                    <div key={lvl} style={{
-                                                        flex: 1, height: 8, borderRadius: 2,
-                                                        background: [, '#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6'][lvl],
-                                                        opacity: lvl <= (selectedAtendimento.participante?.indicativo_saude || 0) ? 1 : 0.2,
-                                                    }} />
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
+                            <ParticipantProfile participante={selectedAtendimento.participante} />
                         )}
+
+                        <div style={{ marginTop: 24, paddingTop: 16, borderTop: '1px solid var(--color-border)', display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+                            {selectedAtendimento.status === 'em_andamento' && (
+                                <>
+                                    <button className="btn btn-secondary" onClick={() => updateStatus('encaminhado')}>
+                                        Encaminhar
+                                    </button>
+                                    <button className="btn btn-primary" style={{ background: '#22c55e', borderColor: '#22c55e', color: '#fff' }} onClick={() => updateStatus('finalizado')}>
+                                        Dar Baixa (Finalizar)
+                                    </button>
+                                </>
+                            )}
+                            {selectedAtendimento.status !== 'em_andamento' && (
+                                <button className="btn btn-secondary" onClick={() => updateStatus('em_andamento')}>
+                                    Reabrir Atendimento
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}

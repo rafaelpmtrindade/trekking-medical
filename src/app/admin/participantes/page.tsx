@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import type { Participante } from '@/types/database';
-import { MountainSnow, Search, Plus, Edit2, Trash2 } from 'lucide-react';
+import { MountainSnow, Search, Plus, Edit2, Trash2, Eye, X } from 'lucide-react';
+import ParticipantProfile from '@/components/ParticipantProfile';
 
 export default function ParticipantesPage() {
     const { user, loading: authLoading } = useAuth();
@@ -16,6 +17,7 @@ export default function ParticipantesPage() {
     const [search, setSearch] = useState('');
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
+    const [viewingParticipante, setViewingParticipante] = useState<Participante | null>(null);
 
     // Form state
     const [form, setForm] = useState({
@@ -413,8 +415,32 @@ export default function ParticipantesPage() {
                             </form>
                         </div>
                     </div >
-                )
-                }
+                )}
+
+                {/* Participant View Modal */}
+                {viewingParticipante && (
+                    <div
+                        style={{
+                            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)',
+                            backdropFilter: 'blur(4px)', zIndex: 10000,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
+                        }}
+                        onClick={() => setViewingParticipante(null)}
+                    >
+                        <div
+                            className="card-static"
+                            style={{ maxWidth: 600, width: '100%', maxHeight: '85vh', overflow: 'auto', padding: '16px 0' }}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div style={{ padding: '0 20px', display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
+                                <button className="btn btn-icon btn-secondary" onClick={() => setViewingParticipante(null)}>
+                                    <X size={20} />
+                                </button>
+                            </div>
+                            <ParticipantProfile participante={viewingParticipante} />
+                        </div>
+                    </div>
+                )}
 
                 {/* Table */}
                 <div className="table-container">
@@ -441,6 +467,9 @@ export default function ParticipantesPage() {
                                     </td>
                                     <td>
                                         <div style={{ display: 'flex', gap: 8 }}>
+                                            <button className="btn btn-sm btn-secondary" title="Ver Perfil" onClick={() => setViewingParticipante(p)}>
+                                                <Eye size={16} />
+                                            </button>
                                             <button className="btn btn-sm btn-secondary" title="Editar" onClick={() => handleEdit(p)}>
                                                 <Edit2 size={16} />
                                             </button>
