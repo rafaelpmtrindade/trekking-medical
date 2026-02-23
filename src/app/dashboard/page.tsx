@@ -58,6 +58,7 @@ export default function DashboardPage() {
     const [flashCards, setFlashCards] = useState<Set<string>>(new Set());
     const [newTimelineIds, setNewTimelineIds] = useState<Set<string>>(new Set());
     const initialLoadDone = useRef(false);
+    const [confirmingDelete, setConfirmingDelete] = useState(false);
 
     useEffect(() => {
         if (!authLoading && !user) {
@@ -228,8 +229,14 @@ export default function DashboardPage() {
     };
 
     const deleteAtendimento = async (id: string) => {
-        if (!confirm('Tem certeza que deseja apagar este atendimento? Esta ação não pode ser desfeita.')) return;
+        if (!confirmingDelete) {
+            setConfirmingDelete(true);
+            // Auto-reset after 3 seconds
+            setTimeout(() => setConfirmingDelete(false), 3000);
+            return;
+        }
 
+        setConfirmingDelete(false);
         // Delete related photos first
         await supabase.from('atendimento_fotos').delete().eq('atendimento_id', id);
         // Delete the atendimento
@@ -543,7 +550,7 @@ export default function DashboardPage() {
                         justifyContent: 'center',
                         padding: 20,
                     }}
-                    onClick={() => setSelectedAtendimento(null)}
+                    onClick={() => { setSelectedAtendimento(null); setConfirmingDelete(false); }}
                 >
                     <div
                         className="card-static"
@@ -561,7 +568,7 @@ export default function DashboardPage() {
                             </div>
                             <button
                                 className="btn btn-icon btn-secondary"
-                                onClick={() => setSelectedAtendimento(null)}
+                                onClick={() => { setSelectedAtendimento(null); setConfirmingDelete(false); }}
                             >
                                 <X size={20} />
                             </button>
@@ -645,17 +652,18 @@ export default function DashboardPage() {
                                 <button
                                     className="btn btn-sm"
                                     style={{
-                                        background: 'rgba(239,68,68,0.1)',
-                                        color: '#ef4444',
+                                        background: confirmingDelete ? 'rgba(239,68,68,0.9)' : 'rgba(239,68,68,0.1)',
+                                        color: confirmingDelete ? '#fff' : '#ef4444',
                                         border: '1px solid rgba(239,68,68,0.3)',
                                         display: 'flex',
                                         alignItems: 'center',
                                         gap: 6,
                                         marginRight: 'auto',
+                                        transition: 'all 0.2s ease',
                                     }}
-                                    onClick={() => deleteAtendimento(selectedAtendimento.id)}
+                                    onClick={(e) => { e.stopPropagation(); deleteAtendimento(selectedAtendimento.id); }}
                                 >
-                                    <Trash2 size={14} /> Apagar
+                                    <Trash2 size={14} /> {confirmingDelete ? 'Confirmar?' : 'Apagar'}
                                 </button>
                             )}
                             {selectedAtendimento.status === 'em_andamento' && (
