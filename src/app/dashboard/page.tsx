@@ -9,6 +9,7 @@ import dynamic from 'next/dynamic';
 import type { Atendimento, StatusAtendimento } from '@/types/database';
 import { GRAVIDADE_CONFIG, Gravidade } from '@/types/database';
 import ParticipantProfile from '@/components/ParticipantProfile';
+import AppNavbar from '@/components/AppNavbar';
 import {
     MountainSnow,
     Activity,
@@ -304,32 +305,7 @@ export default function DashboardPage() {
                 ))}
             </div>
 
-            {/* Navbar */}
-            <nav className="navbar">
-                <div className="navbar-inner">
-                    <a className="navbar-brand" href="/dashboard">
-                        <span className="navbar-brand-icon"><MountainSnow size={24} /></span>
-                        <span className="navbar-brand-text">Trekking Medical</span>
-                    </a>
-                    <div className="navbar-links">
-                        <a href="/dashboard" className="navbar-link active">Dashboard</a>
-                        <a href="/admin/participantes" className="navbar-link">Participantes</a>
-                        <a href="/admin/medicos" className="navbar-link">Equipe</a>
-                        {isSuperAdmin && (
-                            <a href="/super-admin" className="navbar-link" style={{ color: '#a78bfa' }}>⚡ Admin</a>
-                        )}
-                        <button
-                            className="btn btn-sm btn-secondary"
-                            onClick={() => {
-                                supabase.auth.signOut();
-                                router.push('/login');
-                            }}
-                        >
-                            Sair
-                        </button>
-                    </div>
-                </div>
-            </nav>
+            <AppNavbar activePage="dashboard" />
 
             <div className="app-container">
                 <div className="page-header" style={{ position: 'relative', overflow: 'hidden', padding: '32px 24px', borderRadius: 'var(--radius-xl)', marginBottom: 32, background: 'linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(3,7,18,0) 100%)', border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-inner)' }}>

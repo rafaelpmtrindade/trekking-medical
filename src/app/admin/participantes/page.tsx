@@ -8,6 +8,7 @@ import { useEvent } from '@/contexts/EventContext';
 import type { Participante } from '@/types/database';
 import { MountainSnow, Search, Plus, Edit2, Trash2, Eye, X } from 'lucide-react';
 import ParticipantProfile from '@/components/ParticipantProfile';
+import AppNavbar from '@/components/AppNavbar';
 
 export default function ParticipantesPage() {
     const { user, loading: authLoading } = useAuth();
@@ -168,19 +169,7 @@ export default function ParticipantesPage() {
 
     return (
         <>
-            <nav className="navbar">
-                <div className="navbar-inner">
-                    <a className="navbar-brand" href="/dashboard">
-                        <span className="navbar-brand-icon"><MountainSnow size={24} /></span>
-                        <span className="navbar-brand-text">Trekking Medical</span>
-                    </a>
-                    <div className="navbar-links">
-                        <a href="/dashboard" className="navbar-link">Dashboard</a>
-                        <a href="/admin/participantes" className="navbar-link active">Participantes</a>
-                        <a href="/admin/medicos" className="navbar-link">Médicos</a>
-                    </div>
-                </div>
-            </nav>
+            <AppNavbar activePage="participantes" />
 
             <div className="app-container">
                 <div className="page-header">
