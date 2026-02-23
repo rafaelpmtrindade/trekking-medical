@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import type { Evento, EventoStatus } from '@/types/database';
 import {
     Shield, Plus, Edit2, Archive, MountainSnow, Calendar,
-    X, Check, Eye, RotateCcw, Users
+    X, Check, Eye, RotateCcw, Users, Upload, Trash2, Image as ImageIcon, Loader2
 } from 'lucide-react';
 
 export default function SuperAdminEventosPage() {
@@ -22,6 +22,9 @@ export default function SuperAdminEventosPage() {
     const [form, setForm] = useState({ nome: '', descricao: '', foto_url: '', data_inicio: '', data_fim: '', status: 'draft' as EventoStatus });
     const [formError, setFormError] = useState('');
     const [saving, setSaving] = useState(false);
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [uploading, setUploading] = useState(false);
 
     useEffect(() => {
         if (!authLoading && !user) router.push('/login');
@@ -57,6 +60,8 @@ export default function SuperAdminEventosPage() {
         setForm({ nome: '', descricao: '', foto_url: '', data_inicio: '', data_fim: '', status: 'draft' });
         setEditingEvento(null);
         setFormError('');
+        setImageFile(null);
+        setImagePreview(null);
     }
 
     function handleEdit(evt: Evento) {
@@ -69,7 +74,41 @@ export default function SuperAdminEventosPage() {
             status: evt.status,
         });
         setEditingEvento(evt);
+        setImageFile(null);
+        setImagePreview(evt.foto_url || null);
         setShowForm(true);
+    }
+
+    function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        if (file.size > 5 * 1024 * 1024) {
+            setFormError('A imagem deve ter no máximo 5MB.');
+            return;
+        }
+        setImageFile(file);
+        setImagePreview(URL.createObjectURL(file));
+    }
+
+    function removeImage() {
+        setImageFile(null);
+        setImagePreview(null);
+        setForm({ ...form, foto_url: '' });
+    }
+
+    async function uploadImage(file: File): Promise<string | null> {
+        const ext = file.name.split('.').pop() || 'jpg';
+        const fileName = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+        const { error } = await supabase.storage.from('eventos').upload(fileName, file, {
+            cacheControl: '3600',
+            upsert: false,
+        });
+        if (error) {
+            console.error('Upload error:', error);
+            return null;
+        }
+        const { data: urlData } = supabase.storage.from('eventos').getPublicUrl(fileName);
+        return urlData.publicUrl;
     }
 
     async function handleSubmit(e: React.FormEvent) {
@@ -77,10 +116,25 @@ export default function SuperAdminEventosPage() {
         setFormError('');
         setSaving(true);
 
+        let fotoUrl = form.foto_url || null;
+
+        // Upload image if a new file was selected
+        if (imageFile) {
+            setUploading(true);
+            const uploadedUrl = await uploadImage(imageFile);
+            setUploading(false);
+            if (!uploadedUrl) {
+                setFormError('Erro ao fazer upload da imagem. Tente novamente.');
+                setSaving(false);
+                return;
+            }
+            fotoUrl = uploadedUrl;
+        }
+
         const payload = {
             nome: form.nome,
             descricao: form.descricao || null,
-            foto_url: form.foto_url || null,
+            foto_url: fotoUrl,
             data_inicio: form.data_inicio || null,
             data_fim: form.data_fim || null,
             status: form.status,
@@ -190,9 +244,41 @@ export default function SuperAdminEventosPage() {
                                 </div>
 
                                 <div className="form-group">
-                                    <label className="form-label">URL da Foto</label>
-                                    <input className="form-input" value={form.foto_url} placeholder="https://..."
-                                        onChange={(e) => setForm({ ...form, foto_url: e.target.value })} />
+                                    <label className="form-label">Imagem do Evento</label>
+                                    {imagePreview ? (
+                                        <div style={{ position: 'relative', borderRadius: 'var(--radius-lg)', overflow: 'hidden', marginBottom: 8 }}>
+                                            <img src={imagePreview} alt="Preview" style={{ width: '100%', height: 160, objectFit: 'cover', display: 'block' }} />
+                                            <button
+                                                type="button"
+                                                onClick={removeImage}
+                                                style={{
+                                                    position: 'absolute', top: 8, right: 8,
+                                                    background: 'rgba(0,0,0,0.7)', border: 'none', borderRadius: '50%',
+                                                    width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                    cursor: 'pointer', color: '#fff',
+                                                }}
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <label style={{
+                                            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                                            gap: 8, padding: '24px 16px', borderRadius: 'var(--radius-lg)',
+                                            border: '2px dashed var(--color-border)', cursor: 'pointer',
+                                            transition: 'all 0.2s', background: 'rgba(16,185,129,0.03)',
+                                        }}>
+                                            <ImageIcon size={28} style={{ color: 'var(--color-text-muted)', opacity: 0.6 }} />
+                                            <span style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>Clique para selecionar uma imagem</span>
+                                            <span style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', opacity: 0.6 }}>JPG, PNG ou WebP • Máx 5MB</span>
+                                            <input
+                                                type="file"
+                                                accept="image/jpeg,image/png,image/webp,image/gif"
+                                                onChange={handleImageSelect}
+                                                style={{ display: 'none' }}
+                                            />
+                                        </label>
+                                    )}
                                 </div>
 
                                 <div className="form-row">
@@ -220,8 +306,9 @@ export default function SuperAdminEventosPage() {
 
                                 <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 16 }}>
                                     <button type="button" className="btn btn-secondary" onClick={() => { setShowForm(false); resetForm(); }}>Cancelar</button>
-                                    <button type="submit" className="btn btn-primary" disabled={saving}>
-                                        {saving ? 'Salvando...' : editingEvento ? 'Salvar Alterações' : 'Criar Evento'}
+                                    <button type="submit" className="btn btn-primary" disabled={saving || uploading} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                        {(saving || uploading) && <Loader2 size={16} className="animate-spin" style={{ animation: 'spin 1s linear infinite' }} />}
+                                        {uploading ? 'Enviando imagem...' : saving ? 'Salvando...' : editingEvento ? 'Salvar Alterações' : 'Criar Evento'}
                                     </button>
                                 </div>
                             </form>
