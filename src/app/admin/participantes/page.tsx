@@ -4,12 +4,14 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import { useEvent } from '@/contexts/EventContext';
 import type { Participante } from '@/types/database';
 import { MountainSnow, Search, Plus, Edit2, Trash2, Eye, X } from 'lucide-react';
 import ParticipantProfile from '@/components/ParticipantProfile';
 
 export default function ParticipantesPage() {
     const { user, loading: authLoading } = useAuth();
+    const { selectedEvento } = useEvent();
     const router = useRouter();
 
     const [participantes, setParticipantes] = useState<Participante[]>([]);
@@ -33,9 +35,11 @@ export default function ParticipantesPage() {
     const [saving, setSaving] = useState(false);
 
     async function fetchParticipantes() {
+        if (!selectedEvento) return;
         const { data } = await supabase
             .from('participantes')
             .select('*')
+            .eq('evento_id', selectedEvento.id)
             .order('nome');
         if (data) setParticipantes(data);
         setLoading(false);
@@ -43,13 +47,13 @@ export default function ParticipantesPage() {
 
     useEffect(() => {
         if (!authLoading && !user) router.push('/login');
-    }, [user, authLoading, router]);
+        if (!authLoading && user && !selectedEvento) router.push('/');
+    }, [user, authLoading, selectedEvento, router]);
 
     useEffect(() => {
-        if (!user) return;
-        // eslint-disable-next-line react-hooks/set-state-in-effect
+        if (!user || !selectedEvento) return;
         fetchParticipantes();
-    }, [user]);
+    }, [user, selectedEvento]);
 
     function resetForm() {
         setForm({
@@ -127,7 +131,7 @@ export default function ParticipantesPage() {
         if (editingId) {
             ({ error } = await supabase.from('participantes').update(payload).eq('id', editingId));
         } else {
-            ({ error } = await supabase.from('participantes').insert(payload));
+            ({ error } = await supabase.from('participantes').insert({ ...payload, evento_id: selectedEvento?.id }));
         }
 
         if (error) {

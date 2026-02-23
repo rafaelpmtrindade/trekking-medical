@@ -3,13 +3,14 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { User, Session } from '@supabase/supabase-js';
-import type { Medico } from '@/types/database';
+import type { Usuario, EventoUsuario, Permissao } from '@/types/database';
 
 interface AuthContextType {
     user: User | null;
-    medico: Medico | null;
+    usuario: Usuario | null;
     session: Session | null;
     loading: boolean;
+    isSuperAdmin: boolean;
     signIn: (email: string, password: string) => Promise<{ error: string | null }>;
     signOut: () => Promise<void>;
 }
@@ -18,17 +19,17 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
-    const [medico, setMedico] = useState<Medico | null>(null);
+    const [usuario, setUsuario] = useState<Usuario | null>(null);
     const [session, setSession] = useState<Session | null>(null);
     const [loading, setLoading] = useState(true);
 
-    async function fetchMedico(userId: string) {
+    async function fetchUsuario(userId: string) {
         const { data } = await supabase
-            .from('medicos')
+            .from('usuarios')
             .select('*')
             .eq('id', userId)
             .single();
-        setMedico(data);
+        setUsuario(data);
         setLoading(false);
     }
 
@@ -37,7 +38,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setSession(session);
             setUser(session?.user ?? null);
             if (session?.user) {
-                fetchMedico(session.user.id);
+                fetchUsuario(session.user.id);
             } else {
                 setLoading(false);
             }
@@ -47,17 +48,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setSession(session);
             setUser(session?.user ?? null);
             if (session?.user) {
-                fetchMedico(session.user.id);
+                fetchUsuario(session.user.id);
             } else {
-                setMedico(null);
+                setUsuario(null);
                 setLoading(false);
             }
         });
 
         return () => subscription.unsubscribe();
     }, []);
-
-
 
     async function signIn(email: string, password: string) {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -68,12 +67,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     async function signOut() {
         await supabase.auth.signOut();
         setUser(null);
-        setMedico(null);
+        setUsuario(null);
         setSession(null);
     }
 
+    const isSuperAdmin = usuario?.is_super_admin === true;
+
     return (
-        <AuthContext.Provider value={{ user, medico, session, loading, signIn, signOut }}>
+        <AuthContext.Provider value={{ user, usuario, session, loading, isSuperAdmin, signIn, signOut }}>
             {children}
         </AuthContext.Provider>
     );

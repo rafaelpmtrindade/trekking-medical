@@ -1,7 +1,60 @@
+// ============================================================
+// RBAC Types
+// ============================================================
+
+export type EventoStatus = 'draft' | 'ativo' | 'encerrado' | 'arquivado';
+export type EventoRole = 'admin_evento' | 'equipe_saude';
+
+export interface Evento {
+    id: string;
+    nome: string;
+    descricao?: string;
+    foto_url?: string;
+    data_inicio?: string;
+    data_fim?: string;
+    status: EventoStatus;
+    created_by?: string;
+    created_at: string;
+}
+
+export interface Usuario {
+    id: string;
+    nome: string;
+    email?: string;
+    is_super_admin: boolean;
+    is_active: boolean;
+    created_at: string;
+}
+
+export interface EventoUsuario {
+    id: string;
+    evento_id: string;
+    usuario_id: string;
+    role: EventoRole;
+    is_active: boolean;
+    criado_por?: string;
+    created_at: string;
+    // Joined
+    evento?: Evento;
+    permissoes_list?: Permissao[];
+}
+
+export interface Permissao {
+    id: string;
+    codigo: string;
+    descricao?: string;
+    aplica_a_role: string;
+}
+
+// ============================================================
+// Domain Types (existing, enhanced)
+// ============================================================
+
 export interface Participante {
     id: string;
     nome: string;
     nfc_tag_id: string;
+    evento_id?: string;
     cpf?: string;
     idade?: number;
     telefone?: string;
@@ -13,13 +66,13 @@ export interface Participante {
     tipo_sanguineo?: string;
     foto_url?: string;
 
-    // Novas informações clínicas (Premium)
+    // Clinical data
     peso?: number;
     altura?: number;
     cidade_estado?: string;
     equipe_familia?: string;
     biotipo?: string;
-    indicativo_saude?: number; // 1 to 5 scale
+    indicativo_saude?: number;
     cirurgias?: string;
     observacao_hakuna?: string;
     atividade_fisica_semanal?: string;
@@ -47,6 +100,7 @@ export interface Atendimento {
     id: string;
     participante_id: string;
     medico_id: string;
+    evento_id?: string;
     descricao: string;
     gravidade: Gravidade;
     latitude: number;

@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import { useEvent } from '@/contexts/EventContext';
 import dynamic from 'next/dynamic';
 import type { Atendimento, StatusAtendimento } from '@/types/database';
 import { GRAVIDADE_CONFIG, Gravidade } from '@/types/database';
@@ -39,8 +40,9 @@ interface Toast {
 }
 
 export default function DashboardPage() {
-    const { user, medico, loading: authLoading } = useAuth();
-    const isAdmin = medico?.is_admin === true;
+    const { user, loading: authLoading, isSuperAdmin } = useAuth();
+    const { selectedEvento, hasPermission, clearEvento } = useEvent();
+    const canDelete = hasPermission('apagar_atendimento');
     const router = useRouter();
 
     const [atendimentos, setAtendimentos] = useState<Atendimento[]>([]);
@@ -64,11 +66,14 @@ export default function DashboardPage() {
         if (!authLoading && !user) {
             router.push('/login');
         }
-    }, [user, authLoading, router]);
+        if (!authLoading && user && !selectedEvento) {
+            router.push('/');
+        }
+    }, [user, authLoading, selectedEvento, router]);
 
-    // Fetch data
+    // Fetch data (event-scoped)
     const fetchData = useCallback(async () => {
-        if (!user) return;
+        if (!user || !selectedEvento) return;
 
         const { data: atData } = await supabase
             .from('atendimentos')
@@ -78,23 +83,27 @@ export default function DashboardPage() {
                 medico:medicos(*),
                 fotos:atendimento_fotos(*)
             `)
+            .eq('evento_id', selectedEvento.id)
             .order('created_at', { ascending: false });
 
         if (atData) setAtendimentos(atData);
 
         const { count: partCount } = await supabase
             .from('participantes')
-            .select('*', { count: 'exact', head: true });
+            .select('*', { count: 'exact', head: true })
+            .eq('evento_id', selectedEvento.id);
 
         const { count: medCount } = await supabase
-            .from('medicos')
-            .select('*', { count: 'exact', head: true });
+            .from('eventos_usuarios')
+            .select('*', { count: 'exact', head: true })
+            .eq('evento_id', selectedEvento.id)
+            .eq('is_active', true);
 
         setTotalParticipantes(partCount || 0);
         setTotalMedicos(medCount || 0);
         setLoading(false);
         initialLoadDone.current = true;
-    }, [user]);
+    }, [user, selectedEvento]);
 
     // Add toast
     const addToast = useCallback((at: Atendimento) => {
@@ -648,7 +657,7 @@ export default function DashboardPage() {
                         )}
 
                         <div style={{ marginTop: 24, paddingTop: 16, borderTop: '1px solid var(--color-border)', display: 'flex', gap: 12, justifyContent: 'flex-end', alignItems: 'center' }}>
-                            {isAdmin && (
+                            {canDelete && (
                                 <button
                                     className="btn btn-sm"
                                     style={{

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { EventProvider } from "@/contexts/EventContext";
 
 export const metadata: Metadata = {
   title: "Trekking Medical - Monitoramento Médico",
@@ -24,7 +25,9 @@ export default function RootLayout({
     <html lang="pt-BR">
       <body>
         <AuthProvider>
-          {children}
+          <EventProvider>
+            {children}
+          </EventProvider>
         </AuthProvider>
       </body>
     </html>

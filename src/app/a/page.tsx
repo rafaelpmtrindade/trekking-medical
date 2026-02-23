@@ -38,7 +38,7 @@ import {
 function AtendimentoContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
-    const { user, medico, loading: authLoading } = useAuth();
+    const { user, usuario, loading: authLoading } = useAuth();
     const tagId = searchParams.get('t')?.trim() || null;
 
     const [participante, setParticipante] = useState<Participante | null>(null);
@@ -66,7 +66,7 @@ function AtendimentoContent() {
 
     // Fetch participant by NFC tag
     useEffect(() => {
-        console.log('[DEBUG /a] useEffect triggered. tagId:', tagId, 'authLoading:', authLoading, 'user:', !!user, 'medico:', !!medico);
+        console.log('[DEBUG /a] useEffect triggered. tagId:', tagId, 'authLoading:', authLoading, 'user:', !!user, 'usuario:', !!usuario);
 
         if (!tagId) {
             console.log('[DEBUG /a] No tagId present, setting notFound to true');
@@ -83,8 +83,8 @@ function AtendimentoContent() {
 
         // If not authenticated OR not verified as a medico, don't fetch (RLS will block it). 
         // Just stop loading so the login screen can be shown.
-        if (!user || !medico) {
-            console.log('[DEBUG /a] Blocking fetch: user or medico is missing. user:', !!user, 'medico:', !!medico);
+        if (!user || !usuario) {
+            console.log('[DEBUG /a] Blocking fetch: user or usuario is missing. user:', !!user, 'usuario:', !!usuario);
             setLoadingParticipante(false);
             return;
         }
@@ -105,8 +105,8 @@ function AtendimentoContent() {
                 authLoading,
                 hasUser: !!user,
                 userId: user?.id,
-                hasMedico: !!medico,
-                medicoId: medico?.id,
+                hasUsuario: !!usuario,
+                usuarioId: usuario?.id,
                 error: error ? error.message : null,
                 status,
                 dataFound: !!data
@@ -124,7 +124,7 @@ function AtendimentoContent() {
         }
 
         fetchParticipante();
-    }, [tagId, authLoading, user, medico]);
+    }, [tagId, authLoading, user, usuario]);
 
     // Get GPS on mount
     useEffect(() => {
@@ -191,6 +191,7 @@ function AtendimentoContent() {
                 .insert({
                     participante_id: participante.id,
                     medico_id: user.id,
+                    evento_id: participante.evento_id,
                     descricao,
                     gravidade,
                     latitude: gps.latitude,
@@ -247,7 +248,7 @@ function AtendimentoContent() {
         );
     }
 
-    if (!user || !medico) {
+    if (!user || !usuario) {
         return (
             <div className="mobile-container">
                 <div className="login-card" style={{ maxWidth: 400, margin: '40px auto' }}>
@@ -333,7 +334,7 @@ function AtendimentoContent() {
                         <MountainSnow size={24} color="var(--color-primary)" /> Atendimento
                     </h1>
                     <p style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem' }}>
-                        Dr(a). {medico.nome}
+                        Dr(a). {usuario.nome}
                     </p>
                 </div>
             </div>
