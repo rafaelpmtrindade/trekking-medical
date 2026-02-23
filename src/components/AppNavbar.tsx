@@ -26,7 +26,7 @@ export default function AppNavbar({ activePage }: AppNavbarProps) {
             <div className="navbar-inner">
                 <a className="navbar-brand" href="/dashboard">
                     <span className="navbar-brand-icon"><MountainSnow size={24} /></span>
-                    <span className="navbar-brand-text">Trekking Medical</span>
+                    <span className="navbar-brand-text">TrackMed</span>
                     {selectedEvento && (
                         <span style={{
                             marginLeft: 8, fontSize: '0.7rem', padding: '2px 8px',
@@ -61,6 +61,6 @@ export default function AppNavbar({ activePage }: AppNavbarProps) {
                     </button>
                 </div>
             </div>
-        </nav>
+        </nav >
     );
 }

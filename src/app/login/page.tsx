@@ -40,8 +40,8 @@ export default function LoginPage() {
             <div className="login-card">
                 <div className="login-header">
                     <span className="login-icon"><MountainSnow size={48} /></span>
-                    <h1 className="login-title">Trekking Medical</h1>
-                    <p className="login-subtitle">Sistema de Monitoramento Médico</p>
+                    <h1 className="login-title">TrackMed</h1>
+                    <p className="login-subtitle" style={{ maxWidth: 280, margin: '0 auto' }}>Sistema inteligente de apoio médico para eventos esportivos e outdoor.</p>
                 </div>
 
                 {error && <div className="login-error">{error}</div>}

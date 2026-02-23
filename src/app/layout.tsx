@@ -4,8 +4,8 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { EventProvider } from "@/contexts/EventContext";
 
 export const metadata: Metadata = {
-  title: "Trekking Medical - Monitoramento Médico",
-  description: "Sistema de monitoramento médico para eventos de trekking na montanha",
+  title: "TrackMed",
+  description: "Sistema inteligente de apoio médico para eventos esportivos e outdoor.",
   manifest: "/manifest.json",
 };
 

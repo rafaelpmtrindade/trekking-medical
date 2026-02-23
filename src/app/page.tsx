@@ -72,7 +72,7 @@ export default function HomePage() {
         <div className="navbar-inner">
           <a className="navbar-brand" href="/">
             <span className="navbar-brand-icon"><MountainSnow size={24} /></span>
-            <span className="navbar-brand-text">Trekking Medical</span>
+            <span className="navbar-brand-text">TrackMed</span>
           </a>
         </div>
       </nav>
