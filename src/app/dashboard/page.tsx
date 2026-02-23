@@ -22,7 +22,8 @@ import {
     Info,
     FileText,
     Clock,
-    Zap
+    Zap,
+    Trash2
 } from 'lucide-react';
 
 const Map = dynamic(() => import('@/components/Map'), { ssr: false });
@@ -38,7 +39,8 @@ interface Toast {
 }
 
 export default function DashboardPage() {
-    const { user, loading: authLoading } = useAuth();
+    const { user, medico, loading: authLoading } = useAuth();
+    const isAdmin = medico?.is_admin === true;
     const router = useRouter();
 
     const [atendimentos, setAtendimentos] = useState<Atendimento[]>([]);
@@ -223,6 +225,21 @@ export default function DashboardPage() {
             setSelectedAtendimento({ ...selectedAtendimento, status: novoStatus });
             fetchData();
         }
+    };
+
+    const deleteAtendimento = async (id: string) => {
+        if (!confirm('Tem certeza que deseja apagar este atendimento? Esta ação não pode ser desfeita.')) return;
+
+        // Delete related photos first
+        await supabase.from('atendimento_fotos').delete().eq('atendimento_id', id);
+        // Delete the atendimento
+        const { error } = await supabase.from('atendimentos').delete().eq('id', id);
+        if (error) {
+            alert('Erro ao apagar: ' + error.message);
+            return;
+        }
+        setSelectedAtendimento(null);
+        setAtendimentos(prev => prev.filter(a => a.id !== id));
     };
 
     const filteredAtendimentos = filtroGravidade === 'todos'
@@ -623,7 +640,24 @@ export default function DashboardPage() {
                             <ParticipantProfile participante={selectedAtendimento.participante} />
                         )}
 
-                        <div style={{ marginTop: 24, paddingTop: 16, borderTop: '1px solid var(--color-border)', display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+                        <div style={{ marginTop: 24, paddingTop: 16, borderTop: '1px solid var(--color-border)', display: 'flex', gap: 12, justifyContent: 'flex-end', alignItems: 'center' }}>
+                            {isAdmin && (
+                                <button
+                                    className="btn btn-sm"
+                                    style={{
+                                        background: 'rgba(239,68,68,0.1)',
+                                        color: '#ef4444',
+                                        border: '1px solid rgba(239,68,68,0.3)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 6,
+                                        marginRight: 'auto',
+                                    }}
+                                    onClick={() => deleteAtendimento(selectedAtendimento.id)}
+                                >
+                                    <Trash2 size={14} /> Apagar
+                                </button>
+                            )}
                             {selectedAtendimento.status === 'em_andamento' && (
                                 <>
                                     <button className="btn btn-secondary" onClick={() => updateStatus('encaminhado')}>
