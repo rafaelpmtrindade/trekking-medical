@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useEvent } from '@/contexts/EventContext';
 import { useRouter } from 'next/navigation';
 import { MountainSnow, Lock } from 'lucide-react';
 
@@ -11,7 +12,14 @@ export default function LoginPage() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const { signIn } = useAuth();
+    const { clearEvento } = useEvent();
     const router = useRouter();
+
+    // Clear any previously selected event when arriving at login
+    // This allows EventContext to freshly evaluate publicSelectedEventId upon successful login
+    useEffect(() => {
+        clearEvento();
+    }, [clearEvento]);
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();

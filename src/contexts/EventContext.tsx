@@ -14,6 +14,11 @@ interface EventContextType {
     selectEvento: (evento: Evento) => void;
     clearEvento: () => void;
     hasPermission: (codigo: string) => boolean;
+
+    // Public selection (before login)
+    publicSelectedEventId: string | null;
+    selectPublicEvent: (id: string) => void;
+    clearPublicEvent: () => void;
 }
 
 const EventContext = createContext<EventContextType | undefined>(undefined);
@@ -25,6 +30,23 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
     const [membership, setMembership] = useState<EventoUsuario | null>(null);
     const [permissions, setPermissions] = useState<string[]>([]);
     const [loading, setLoading] = useState(true);
+    const [publicSelectedEventId, setPublicSelectedEventId] = useState<string | null>(null);
+
+    // Initialize public selection from localStorage
+    useEffect(() => {
+        const saved = localStorage.getItem('trekking_public_event_id');
+        if (saved) setPublicSelectedEventId(saved);
+    }, []);
+
+    const selectPublicEvent = useCallback((id: string) => {
+        localStorage.setItem('trekking_public_event_id', id);
+        setPublicSelectedEventId(id);
+    }, []);
+
+    const clearPublicEvent = useCallback(() => {
+        localStorage.removeItem('trekking_public_event_id');
+        setPublicSelectedEventId(null);
+    }, []);
 
     // Fetch events the user has access to
     useEffect(() => {
@@ -62,12 +84,20 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
         fetchEventos();
     }, [user, isSuperAdmin]);
 
-    // Auto-select event if there's only one
+    // Auto-select event if there's only one OR if there's a public choice the user has access to
     useEffect(() => {
-        if (eventos.length === 1 && !selectedEvento) {
+        if (eventos.length === 0 || selectedEvento || loading) return;
+
+        if (eventos.length === 1) {
             selectEvento(eventos[0]);
+            return;
         }
-    }, [eventos]);
+
+        if (publicSelectedEventId) {
+            const match = eventos.find(e => e.id === publicSelectedEventId);
+            if (match) selectEvento(match);
+        }
+    }, [eventos, selectedEvento, publicSelectedEventId, loading]);
 
     // When event is selected, fetch membership and permissions
     const selectEvento = useCallback(async (evento: Evento) => {
@@ -140,6 +170,9 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
             selectEvento,
             clearEvento,
             hasPermission,
+            publicSelectedEventId,
+            selectPublicEvent,
+            clearPublicEvent,
         }}>
             {children}
         </EventContext.Provider>

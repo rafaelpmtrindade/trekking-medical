@@ -12,10 +12,11 @@ interface AppNavbarProps {
 
 export default function AppNavbar({ activePage }: AppNavbarProps) {
     const { isSuperAdmin, signOut } = useAuth();
-    const { selectedEvento, clearEvento } = useEvent();
+    const { selectedEvento, clearEvento, clearPublicEvent } = useEvent();
     const router = useRouter();
 
     function handleTrocarEvento() {
+        clearPublicEvent();
         clearEvento();
         router.push('/');
     }
