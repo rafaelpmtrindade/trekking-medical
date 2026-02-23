@@ -314,7 +314,10 @@ export default function DashboardPage() {
                     <div className="navbar-links">
                         <a href="/dashboard" className="navbar-link active">Dashboard</a>
                         <a href="/admin/participantes" className="navbar-link">Participantes</a>
-                        <a href="/admin/medicos" className="navbar-link">Médicos</a>
+                        <a href="/admin/medicos" className="navbar-link">Equipe</a>
+                        {isSuperAdmin && (
+                            <a href="/super-admin" className="navbar-link" style={{ color: '#a78bfa' }}>⚡ Admin</a>
+                        )}
                         <button
                             className="btn btn-sm btn-secondary"
                             onClick={() => {
