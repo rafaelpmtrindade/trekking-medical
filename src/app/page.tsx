@@ -10,7 +10,7 @@ import type { Evento } from '@/types/database';
 
 export default function HomePage() {
   const { user, loading: authLoading } = useAuth();
-  const { selectPublicEvent, publicSelectedEventId, clearPublicEvent } = useEvent();
+  const { selectPublicEvent, publicSelectedEventId, clearPublicEvent, selectedEvento, selectEvento, loading: eventLoading } = useEvent();
   const router = useRouter();
 
   const [publicEvents, setPublicEvents] = useState<Evento[]>([]);
@@ -34,10 +34,16 @@ export default function HomePage() {
   }, []);
 
   function handleEventClick(evento: Evento) {
-    // Save to public context
-    selectPublicEvent(evento.id);
-    setSelectedEventForModal(evento);
-    setShowRoleModal(true);
+    if (user) {
+      // Logged-in user: select event directly in context
+      selectEvento(evento);
+      // The redirect useEffect below will navigate to dashboard once selectedEvento is set
+    } else {
+      // Not logged in: save public selection and show role modal
+      selectPublicEvent(evento.id);
+      setSelectedEventForModal(evento);
+      setShowRoleModal(true);
+    }
   }
 
   function handleRoleSelection(role: 'participante' | 'organizacao') {
@@ -49,15 +55,15 @@ export default function HomePage() {
     }
   }
 
-  // If already logged in AND has an active event selected via EventContext
-  // Note: the EventContext will automatically select the publicSelectedEventId if the user has access.
+  // Only redirect to dashboard if logged in AND an event is already selected
+  // This prevents the redirect loop: dashboard → / → dashboard
   useEffect(() => {
-    if (user && !authLoading) {
+    if (user && !authLoading && !eventLoading && selectedEvento) {
       router.push('/dashboard');
     }
-  }, [user, authLoading, router]);
+  }, [user, authLoading, eventLoading, selectedEvento, router]);
 
-  if (loading || authLoading) {
+  if (loading || authLoading || (user && eventLoading)) {
     return (
       <div className="loading-container">
         <div className="spinner" />
