@@ -19,7 +19,7 @@ interface EquipeMember {
 
 export default function EquipePage() {
     const { user, loading: authLoading } = useAuth();
-    const { selectedEvento, hasPermission } = useEvent();
+    const { selectedEvento, hasPermission, loading: eventLoading } = useEvent();
     const router = useRouter();
 
     const [equipe, setEquipe] = useState<EquipeMember[]>([]);
@@ -39,9 +39,9 @@ export default function EquipePage() {
     const [editSaving, setEditSaving] = useState(false);
 
     useEffect(() => {
-        if (!authLoading && !user) router.push('/login');
-        if (!authLoading && user && !selectedEvento) router.push('/');
-    }, [user, authLoading, selectedEvento, router]);
+        if (!authLoading && !user) { router.push('/login'); return; }
+        if (!authLoading && !eventLoading && user && !selectedEvento) router.push('/');
+    }, [user, authLoading, eventLoading, selectedEvento, router]);
 
     useEffect(() => {
         if (!user || !selectedEvento) return;
@@ -157,7 +157,7 @@ export default function EquipePage() {
         setter(prev => prev.includes(codigo) ? prev.filter(p => p !== codigo) : [...prev, codigo]);
     };
 
-    if (authLoading || loading) {
+    if (authLoading || eventLoading || loading) {
         return <div className="loading-container"><div className="spinner" /></div>;
     }
 

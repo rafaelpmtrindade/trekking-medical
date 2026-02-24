@@ -12,7 +12,7 @@ import AppNavbar from '@/components/AppNavbar';
 
 export default function ParticipantesPage() {
     const { user, loading: authLoading } = useAuth();
-    const { selectedEvento } = useEvent();
+    const { selectedEvento, loading: eventLoading } = useEvent();
     const router = useRouter();
 
     const [participantes, setParticipantes] = useState<Participante[]>([]);
@@ -47,9 +47,9 @@ export default function ParticipantesPage() {
     }
 
     useEffect(() => {
-        if (!authLoading && !user) router.push('/login');
-        if (!authLoading && user && !selectedEvento) router.push('/');
-    }, [user, authLoading, selectedEvento, router]);
+        if (!authLoading && !user) { router.push('/login'); return; }
+        if (!authLoading && !eventLoading && user && !selectedEvento) router.push('/');
+    }, [user, authLoading, eventLoading, selectedEvento, router]);
 
     useEffect(() => {
         if (!user || !selectedEvento) return;
@@ -159,7 +159,7 @@ export default function ParticipantesPage() {
         )
         : participantes;
 
-    if (authLoading || loading) {
+    if (authLoading || eventLoading || loading) {
         return (
             <div className="loading-container">
                 <div className="spinner" />

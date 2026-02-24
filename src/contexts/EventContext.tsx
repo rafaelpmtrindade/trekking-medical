@@ -48,56 +48,63 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
         setPublicSelectedEventId(null);
     }, []);
 
-    // Fetch events the user has access to
+    // Fetch events and auto-select in a single operation to avoid race conditions
+    // (prevents flickering when dashboard checks selectedEvento before auto-select runs)
     useEffect(() => {
         if (!user) {
             setEventos([]);
+            setSelectedEvento(null);
+            setMembership(null);
+            setPermissions([]);
             setLoading(false);
             return;
         }
 
-        async function fetchEventos() {
+        async function fetchAndAutoSelect() {
             if (!user) return;
+
+            let evts: Evento[] = [];
             if (isSuperAdmin) {
-                // Super admin sees all events
                 const { data } = await supabase
                     .from('eventos')
                     .select('*')
                     .order('created_at', { ascending: false });
-                setEventos(data || []);
+                evts = data || [];
             } else {
-                // Regular users see only their events
                 const { data: memberships } = await supabase
                     .from('eventos_usuarios')
                     .select('evento:eventos(*)')
                     .eq('usuario_id', user.id)
                     .eq('is_active', true);
 
-                const evts = memberships
+                evts = memberships
                     ?.map((m: any) => m.evento)
                     .filter(Boolean) || [];
-                setEventos(evts);
             }
+
+            setEventos(evts);
+
+            // Auto-select event before setting loading to false
+            // This prevents the gap where loading=false but selectedEvento=null
+            let autoEvent: Evento | null = null;
+            if (evts.length === 1) {
+                autoEvent = evts[0];
+            } else if (evts.length > 1) {
+                const publicId = publicSelectedEventId || localStorage.getItem('trekking_public_event_id');
+                if (publicId) {
+                    autoEvent = evts.find(e => e.id === publicId) || null;
+                }
+            }
+
+            if (autoEvent && !selectedEvento) {
+                await selectEvento(autoEvent);
+            }
+
             setLoading(false);
         }
 
-        fetchEventos();
+        fetchAndAutoSelect();
     }, [user, isSuperAdmin]);
-
-    // Auto-select event if there's only one OR if there's a public choice the user has access to
-    useEffect(() => {
-        if (eventos.length === 0 || selectedEvento || loading) return;
-
-        if (eventos.length === 1) {
-            selectEvento(eventos[0]);
-            return;
-        }
-
-        if (publicSelectedEventId) {
-            const match = eventos.find(e => e.id === publicSelectedEventId);
-            if (match) selectEvento(match);
-        }
-    }, [eventos, selectedEvento, publicSelectedEventId, loading]);
 
     // When event is selected, fetch membership and permissions
     const selectEvento = useCallback(async (evento: Evento) => {

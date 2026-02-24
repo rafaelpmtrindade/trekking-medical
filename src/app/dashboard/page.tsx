@@ -42,7 +42,7 @@ interface Toast {
 
 export default function DashboardPage() {
     const { user, loading: authLoading, isSuperAdmin } = useAuth();
-    const { selectedEvento, hasPermission, clearEvento } = useEvent();
+    const { selectedEvento, hasPermission, clearEvento, loading: eventLoading } = useEvent();
     const canDelete = hasPermission('apagar_atendimento');
     const router = useRouter();
 
@@ -66,11 +66,13 @@ export default function DashboardPage() {
     useEffect(() => {
         if (!authLoading && !user) {
             router.push('/login');
+            return;
         }
-        if (!authLoading && user && !selectedEvento) {
+        // Wait for both auth AND event context to finish loading before redirecting
+        if (!authLoading && !eventLoading && user && !selectedEvento) {
             router.push('/');
         }
-    }, [user, authLoading, selectedEvento, router]);
+    }, [user, authLoading, eventLoading, selectedEvento, router]);
 
     // Fetch data (event-scoped)
     const fetchData = useCallback(async () => {
@@ -266,7 +268,7 @@ export default function DashboardPage() {
     const countByGravidade = (g: Gravidade) => atendimentos.filter((a) => a.gravidade === g).length;
     const countByStatus = (s: string) => atendimentos.filter((a) => a.status === s).length;
 
-    if (authLoading || loading) {
+    if (authLoading || eventLoading || loading) {
         return (
             <div className="loading-container">
                 <div className="spinner" />
